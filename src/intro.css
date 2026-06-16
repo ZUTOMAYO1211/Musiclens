@@ -1,0 +1,411 @@
+/* Design System & Variables */
+:root {
+  --spotify-green: #1ed760;
+  --spotify-green-hover: #1db954;
+  --bg-dark-rgba: rgba(10, 10, 10, 0.65);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-glass-hover: rgba(255, 255, 255, 0.2);
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-muted: #727272;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-drag: none;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #000000;
+  overflow: hidden;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Container */
+.intro-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  overflow: hidden;
+}
+
+/* Background canvas wrapper */
+.dither-bg-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* UI Layer overlaying the background */
+.intro-ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.5rem;
+  pointer-events: none; /* Let pointer events pass to Three.js canvas */
+}
+
+/* Elements should restore pointer events */
+.interactive {
+  pointer-events: auto;
+}
+
+/* HEADER */
+.intro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.intro-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.intro-logo:hover {
+  transform: scale(1.02);
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--spotify-green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(30, 215, 96, 0.4);
+}
+
+.logo-text {
+  background: linear-gradient(135deg, #ffffff 40%, #a3a3a3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Language Toggle */
+.lang-switch {
+  display: flex;
+  background: rgba(20, 20, 20, 0.7);
+  border: 1px solid var(--border-glass);
+  border-radius: 999px;
+  padding: 3px;
+  backdrop-filter: blur(10px);
+}
+
+.lang-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lang-btn.active {
+  background: var(--text-primary);
+  color: #000000;
+}
+
+/* MAIN HERO CARD */
+.intro-hero-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem 0;
+}
+
+.intro-card {
+  width: 100%;
+  max-width: 580px;
+  background: linear-gradient(135deg, rgba(15, 15, 15, 0.75) 0%, rgba(5, 5, 5, 0.9) 100%);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 3.5rem 3rem;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95),
+              0 0 50px rgba(30, 215, 96, 0.02),
+              inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  text-align: center;
+  animation: cardFadeIn 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+}
+
+.intro-card * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-drag: none;
+  cursor: inherit;
+}
+
+/* Ensure interactive button still has pointer cursor */
+.intro-card .cta-button,
+.intro-card .cta-button * {
+  cursor: pointer;
+}
+
+.intro-card.dragging {
+  cursor: grabbing;
+  box-shadow: 0 50px 120px rgba(0, 0, 0, 0.98),
+              0 0 45px rgba(30, 215, 96, 0.18),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  padding: 6px 16px;
+  border-radius: 999px;
+  margin-bottom: 1.75rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.badge-pulse {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: var(--spotify-green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--spotify-green);
+  animation: badgePulseKey 2s infinite ease-in-out;
+}
+
+@keyframes badgePulseKey {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+    box-shadow: 0 0 12px rgba(30, 215, 96, 0.9);
+  }
+}
+
+.intro-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.25rem, 5.5vw, 3rem);
+  line-height: 1.15;
+  margin-bottom: 1.5rem;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, #ffffff 40%, #9e9e9e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.intro-desc {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #cccccc;
+  margin-bottom: 2.5rem;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2.75rem;
+}
+
+.feature-item {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 1.25rem 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feature-item:hover {
+  background: rgba(30, 215, 96, 0.03);
+  border-color: rgba(30, 215, 96, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(30, 215, 96, 0.08);
+}
+
+.feat-emoji {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.feat-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.feat-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* CTA Button */
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 280px;
+  background: var(--text-primary);
+  color: #000000;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 1rem 2.25rem;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+  border: 1px solid transparent;
+}
+
+.cta-button:hover {
+  background: var(--spotify-green);
+  color: #000000;
+  border-color: var(--spotify-green);
+  box-shadow: 0 10px 35px rgba(30, 215, 96, 0.4);
+  transform: translateY(-3px);
+}
+
+.cta-arrow {
+  transition: transform 0.2s ease;
+}
+
+.cta-button:hover .cta-arrow {
+  transform: translateX(4px);
+}
+
+/* FOOTER */
+.intro-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: var(--text-secondary);
+}
+
+/* Responsive adjust */
+@media (max-width: 600px) {
+  .intro-ui-layer {
+    padding: 1.5rem;
+  }
+  
+  .intro-card {
+    padding: 2.25rem 1.5rem;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  
+  .feature-item {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .feat-emoji {
+    margin-bottom: 0;
+  }
+  
+  .intro-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .desktop-only-br {
+    display: none;
+  }
+}

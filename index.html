@@ -1,0 +1,2159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MusicLens · 뮤직렌즈</title>
+<style>
+:root{
+  --bg-base:#000000; 
+  --bg-surface:#0a0a0a; 
+  --bg-elevated:#121212; 
+  --bg-card:#181818;
+  --text-primary:#ffffff; --text-secondary:#8a8a8a; --text-muted:#555555;
+  --accent:#ffffff; --accent-dark:#262626; --accent-cyan:#e5e5e5;
+  --accent-gradient:linear-gradient(135deg, #ffffff, #8a8a8a);
+  --color-error:#ffffff; --color-warning:#8a8a8a; --color-info:#555555;
+  --border-subtle:#262626; --border-muted:#141414;
+  --shadow-heavy:none;
+  --shadow-medium:none;
+  --shadow-glow:none;
+  --radius-sm:0px; --radius-md:0px; --radius-lg:0px;
+  --radius-pill:0px; --radius-circle:0px;
+  --font-ui:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono:SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-5:20px; --space-6:24px; --space-8:32px;
+  --header-h:72px; --vibe-drawer-w:400px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  font-family:var(--font-ui); background:var(--bg-base); color:var(--text-primary);
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+  position:relative;
+}
+/* Ambient background hidden */
+.ambient-bg{display:none;}
+
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#262626;border-radius:0px;}
+::-webkit-scrollbar-thumb:hover{background:#404040;}
+::-webkit-scrollbar-track{background:transparent;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+img{display:block;}
+
+/* ---------- Layout ---------- */
+.app-container{
+  display:flex; flex-direction:column; height:100vh; position:relative; z-index:1;
+}
+@media(min-width:769px){
+  .app-container{
+    transition: padding-right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .app-container.vibe-open{
+    padding-right: var(--vibe-drawer-w);
+  }
+}
+.global-header{
+  height:var(--header-h); display:flex; align-items:center; justify-content:space-between;
+  padding:0 var(--space-6); background:rgba(0, 0, 0, 0.8); backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px); border-bottom:1px solid var(--border-subtle);
+  position:sticky; top:0; z-index:40; transition:background .2s;
+}
+.global-header.scrolled{background:#000000;}
+.header-left{display:flex; align-items:center; gap:var(--space-6);}
+.header-right{display:flex; align-items:center; gap:var(--space-4);}
+
+.nav-logo{display:flex;align-items:center;gap:var(--space-2);font-family:var(--font-mono);font-weight:700;font-size:18px;letter-spacing:1px;}
+.nav-logo .logo-mark{color:#ffffff;display:grid;place-items:center;}
+.topbar-nav{display:flex;gap:var(--space-2);}
+.topbar-nav button{
+  width:32px;height:32px;border-radius:0px;font-family:var(--font-mono);
+  background:#0a0a0a; display:grid;place-items:center;color:var(--text-secondary);
+  border:1px solid var(--border-subtle); transition:background .15s, color .15s;
+}
+.topbar-nav button:hover{color:#fff; background:#161616; border-color:#8a8a8a;}
+
+.header-nav{display:flex; gap:var(--space-1); align-items:center;}
+.header-nav .nav-link{
+  display:flex;align-items:center;gap:8px;padding:6px 14px;
+  border-radius:0px;color:var(--text-secondary);font-family:var(--font-mono);font-weight:600;font-size:12px;
+  transition:color .15s,background .15s, border-color .15s;
+  border:1px solid transparent;
+}
+.header-nav .nav-link:hover{color:#fff; background:#161616; border-color:#262626;}
+.header-nav .nav-link.active{
+  color:#fff; background:#222222; border-color:#ffffff;
+}
+.header-nav .nav-link.active .nav-ic{color:#ffffff;}
+.nav-ic{display:grid;place-items:center;width:18px;height:18px;flex-shrink:0;}
+
+.main-content{
+  flex:1; overflow-y:auto; position:relative;
+}
+.main-inner{padding:var(--space-6) var(--space-6) 80px;max-width:1300px;margin:0 auto;}
+
+.lang-toggle{display:flex;background:#0d0d0d;border-radius:0px;padding:0px;border:1px solid var(--border-subtle);}
+.lang-toggle button{
+  padding:6px 12px;border-radius:0px;font-family:var(--font-mono);font-size:11px;font-weight:700;
+  letter-spacing:1px;color:var(--text-secondary);text-transform:uppercase; transition:background .15s, color .15s;
+}
+.lang-toggle button.active{background:#ffffff;color:#000000;}
+
+/* ---------- Buttons ---------- */
+.btn-primary{
+  background:#ffffff;color:#000000;font-family:var(--font-mono);font-weight:700;font-size:12px;
+  padding:12px 28px;border-radius:0px;letter-spacing:1px;text-transform:uppercase;
+  transition:background .15s, color .15s; display:inline-block; border:1px solid #ffffff; text-align:center;
+}
+.btn-primary:hover{background:#000000;color:#ffffff;border-color:#ffffff;}
+.btn-secondary{
+  background:#0a0a0a;color:#ffffff;font-family:var(--font-mono);font-weight:700;font-size:11px;
+  padding:9px 18px;border-radius:0px;letter-spacing:0.8px;text-transform:uppercase;
+  transition:background .15s, border-color .15s; border:1px solid var(--border-subtle);
+}
+.btn-secondary:hover{background:#161616;border-color:#ffffff;}
+.btn-outlined{
+  border:1px solid var(--border-subtle);color:var(--text-secondary);font-family:var(--font-mono);font-weight:600;font-size:11px;
+  padding:7px 16px;border-radius:0px;transition:border-color .15s,color .15s,background .15s;
+}
+.btn-outlined:hover{border-color:#fff;color:#fff;background:#111111;}
+.btn-outlined.active{border-color:#ffffff;color:#ffffff;background:#1a1a1a;}
+
+.btn-play{
+  width:44px;height:44px;border-radius:0px;background:#ffffff;
+  color:#000000;display:grid;place-items:center;transition:background .15s, color .15s;
+  border:1px solid #ffffff;
+}
+.btn-play:hover{background:#000000;color:#ffffff;}
+.btn-play.sm{width:32px;height:32px;}
+.btn-play.sm svg{width:14px;height:14px;}
+.btn-icon{width:36px;height:36px;border-radius:0px;display:grid;place-items:center;color:var(--text-secondary);transition:color .15s,background .15s; border:1px solid transparent;}
+.btn-icon:hover{color:#fff;background:#111111;border-color:var(--border-subtle);}
+
+/* ---------- Sections ---------- */
+.section{margin-bottom:var(--space-8);}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:var(--space-4);}
+.section-title{font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+.section-subtitle{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-top:4px;}
+.see-all{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);transition:color .15s;}
+.see-all:hover{color:#ffffff;text-decoration:underline;}
+
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-5);}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-5);}
+.horizontal-scroll{display:flex;gap:var(--space-4);overflow-x:auto;padding-bottom:var(--space-3);scroll-snap-type:x proximity;}
+.horizontal-scroll>*{scroll-snap-align:start;}
+
+/* ---------- Hero ---------- */
+.hero{
+  position:relative;border-radius:0px;overflow:hidden;padding:48px var(--space-6);
+  margin-bottom:var(--space-6); isolation:isolate;
+  background:#0a0a0a; border:1px solid var(--border-subtle);
+}
+.hero-bg{display:none;}
+.hero h1{font-size:clamp(28px,4.5vw,46px);font-weight:700;line-height:1.1;letter-spacing:-1.5px;max-width:640px;}
+.hero p{font-family:var(--font-mono);font-size:13px;color:var(--text-secondary);margin:var(--space-3) 0 var(--space-5);max-width:480px;line-height:1.5;letter-spacing:-0.2px;}
+
+/* ---------- Genre Card ---------- */
+.genre-card{
+  position:relative;border-radius:0px;overflow:hidden;padding:var(--space-4) var(--space-5);
+  min-height:180px;display:flex;flex-direction:column;justify-content:space-between;
+  cursor:pointer;transition:border-color .2s, background-color .2s;
+  border:1px solid var(--border-subtle);
+  background:#0a0a0a !important;
+}
+.genre-card::after{display:none;}
+.genre-card>*{position:relative;z-index:1;}
+.genre-card:hover{border-color:#ffffff;background:#111111 !important;}
+.genre-card .gc-emoji{font-family:var(--font-mono);font-size:24px;color:#ffffff;}
+.genre-card .gc-name{font-size:20px;font-weight:700;}
+.genre-card .gc-name small{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-top:2px;}
+.genre-card .gc-sub{font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--text-secondary);line-height:1.5;min-height:33px;margin-top:8px;}
+.genre-card .gc-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-top:auto;}
+.listeners-bar{flex:1;}
+.listeners-bar .lb-track{height:4px;border-radius:0px;background:#1a1a1a;overflow:hidden;margin-bottom:4px;}
+.listeners-bar .lb-fill{height:100%;background:#ffffff;border-radius:0px;}
+.listeners-bar .lb-label{font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--text-secondary);}
+.gc-go{background:#161616;border:1px solid var(--border-subtle);color:#fff;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:6px 12px;border-radius:0px;white-space:nowrap; transition:background .15s, border-color .15s;}
+.gc-go:hover{background:#262626;border-color:#ffffff;}
+.gc-artists{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);line-height:1.5;}
+
+/* ---------- Song Card (Explorer/Taste Style) ---------- */
+.song-card{
+  width:165px;flex-shrink:0;background:#0a0a0a;border-radius:0px;
+  padding:var(--space-3);transition:background .2s, border-color .2s;cursor:pointer;position:relative;
+  border:1px solid var(--border-subtle);
+}
+.song-card:hover{background:#111111;border-color:#ffffff;}
+.song-card:hover .sc-play{opacity:1;transform:translateY(0);}
+.art-thumb{
+  width:100%;aspect-ratio:1;border-radius:0px;margin-bottom:var(--space-2);
+  position:relative;overflow:hidden;display:grid;place-items:center;font-size:24px;
+  border:1px solid var(--border-subtle);
+}
+.sc-play{
+  position:absolute;bottom:8px;right:8px;opacity:0;transform:translateY(0);
+  transition:opacity .2s;z-index:2;
+}
+.song-card .sc-title{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.song-card .sc-artist{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.song-card .sc-meta{display:flex;align-items:center;gap:var(--space-1);margin-top:var(--space-2);}
+
+/* ---------- Tags ---------- */
+.genre-tag{
+  display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:0px;letter-spacing:.3px;
+  background:#141414;color:#fff;white-space:nowrap;
+  border:1px solid var(--border-subtle);
+}
+.genre-tag .gt-dot{width:4px;height:4px;border-radius:0px;background:#ffffff;}
+.era-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;font-weight:700;padding:4px 10px;border-radius:0px;background:#111111;letter-spacing:.3px; border:1px solid var(--border-subtle);}
+.pill-tag{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:6px 14px;border-radius:0px;background:#0d0d0d;color:var(--text-secondary);white-space:nowrap;transition:background .15s,color .15s,border-color .15s;cursor:pointer; border:1px solid var(--border-subtle);}
+.pill-tag:hover{background:#1c1c1c;color:#fff; border-color:#ffffff;}
+
+/* ---------- Editorial Rank Charts ---------- */
+.chart-head{display:grid;grid-template-columns:36px 1fr 100px 70px 80px 48px;gap:var(--space-3);padding:0 var(--space-3) var(--space-3);border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);align-items:center;}
+.chart-row{
+  display:grid;grid-template-columns:36px 1fr 100px 70px 80px 48px;gap:var(--space-3);
+  padding:var(--space-3);border-radius:0px;align-items:center;
+  background:#050505; border:1px solid var(--border-subtle); margin-bottom:8px;
+  transition:background .15s ease, border-color .15s;cursor:pointer;
+}
+.chart-head.gd,.chart-row.gd{grid-template-columns:36px 1fr 64px 84px 56px;}
+.chart-row:hover{background:#111111; border-color:#ffffff;}
+.cr-rankcell{position:relative;display:grid;place-items:center;height:36px;}
+.cr-rank{font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--text-muted);}
+.cr-playbtn{position:absolute;inset:0;margin:auto;opacity:0;pointer-events:none;}
+.chart-row:hover .cr-rank{opacity:0;}
+.chart-row:hover .cr-playbtn{opacity:1;pointer-events:auto;}
+.cr-song{display:flex;align-items:center;gap:var(--space-3);min-width:0;}
+.cr-song .art-thumb{width:40px;height:40px;margin:0;font-size:14px;flex-shrink:0;border-radius:0px;}
+.cr-song .cr-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cr-song .cr-artist{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cr-num{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);text-align:right;}
+.rank-change{font-family:var(--font-mono);display:flex;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:700;}
+.rc-up{color:#ffffff;} .rc-down{color:#8a8a8a;} .rc-same{color:var(--text-muted);}
+.rc-new{background:#ffffff;color:#000000;font-family:var(--font-mono);font-size:8px;padding:2px 5px;border-radius:0px;letter-spacing:.3px; font-weight:700;}
+
+/* ---------- filter bar ---------- */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-5);}
+
+/* ---------- Genre detail ---------- */
+.genre-hero{
+  position:relative;border-radius:0px;overflow:hidden;padding:48px var(--space-6) var(--space-5);
+  min-height:280px;display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:var(--space-6);
+  border:1px solid var(--border-subtle);
+  background:#0a0a0a !important;
+}
+.genre-hero::after{display:none;}
+.genre-hero>*{position:relative;z-index:1;}
+.genre-hero .gh-emoji{font-family:var(--font-mono);font-size:48px;margin-bottom:var(--space-2);color:#ffffff;}
+.genre-hero h1{font-size:clamp(32px,5.5vw,56px);font-weight:700;letter-spacing:-1.5px;}
+.genre-hero .gh-desc{font-size:14px;color:var(--text-secondary);max-width:600px;margin-top:var(--space-3);line-height:1.6;}
+.char-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--space-4);}
+
+.artist-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-4);}
+.artist-cell{display:flex;flex-direction:column;align-items:center;gap:var(--space-2);text-align:center;}
+.artist-avatar{width:90px;height:90px;border-radius:0px;display:grid;place-items:center;font-family:var(--font-mono);font-size:24px;font-weight:700;color:#fff;border:1px solid var(--border-subtle);}
+.artist-cell .an{font-size:13px;font-weight:600;color:var(--text-primary);}
+
+.related-card{background:#0a0a0a;border-radius:0px;padding:var(--space-3);display:flex;align-items:center;gap:var(--space-3);cursor:pointer;transition:background .2s, border-color .2s; border:1px solid var(--border-subtle);}
+.related-card:hover{background:#111111; border-color:#ffffff;}
+.related-card .rc-art{width:48px;height:48px;border-radius:0px;flex-shrink:0;border:1px solid var(--border-subtle);}
+.related-card .rc-name{font-size:14px;font-weight:700;}
+.related-card .rc-name small{font-family:var(--font-mono);display:block;font-size:11px;color:var(--text-secondary);font-weight:600;margin-top:2px;}
+
+/* ---------- Live Share Visualizer Widget ---------- */
+.share-widget{
+  background:#0a0a0a; border:1px solid var(--border-subtle); border-radius:0px;
+  padding:var(--space-4); margin-bottom:var(--space-6); display:flex; flex-direction:column; gap:var(--space-3);
+}
+.sw-head{display:flex; justify-content:space-between; align-items:center;}
+.sw-title{font-family:var(--font-mono);font-size:12px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-primary); display:flex; align-items:center; gap:8px;}
+.sw-pulsing-dot{width:6px; height:6px; background:#ffffff; border-radius:0px; animation:pulseGlow 2s infinite;}
+@keyframes pulseGlow{0%,100%{opacity:0.3;}50%{opacity:1;}}
+.sw-bars{display:flex; flex-direction:column; gap:8px;}
+.sw-bar-row{display:flex; align-items:center; gap:var(--space-3); font-family:var(--font-mono);font-size:11px; font-weight:700;}
+.sw-bar-label{width:90px; text-align:left;}
+.sw-bar-track{flex:1; height:6px; background:#161616; border-radius:0px; overflow:hidden;}
+.sw-bar-fill{height:100%; border-radius:0px; transition:width 1s cubic-bezier(0.16, 1, 0.3, 1);}
+.sw-bar-val{width:45px; text-align:right; color:var(--text-secondary);}
+
+/* ---------- Timeline Flow & Lineage ---------- */
+.timeline{display:flex;flex-direction:column;gap:var(--space-6);padding:var(--space-4) 0; position:relative; max-width:680px; margin:0 auto;}
+.era-card{
+  width:100%; flex-shrink:0;border-radius:0px;overflow:hidden;
+  cursor:pointer;transition:border-color .2s;position:relative;
+  border:1px solid var(--border-subtle); background:#0a0a0a;
+}
+.era-card:hover{border-color:#ffffff;}
+.era-card .ec-top{padding:var(--space-5);min-height:140px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;}
+.era-card .ec-top::after{display:none;}
+.era-card .ec-top>*{position:relative;z-index:1;}
+.era-card .ec-decade{font-family:var(--font-mono);font-size:32px;font-weight:700;letter-spacing:-1.5px;text-shadow:0 2px 4px rgba(0,0,0,0.6);}
+.era-card .ec-title{font-size:13px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
+.era-card .ec-body{background:#0d0d0d;padding:0;max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease;}
+.era-card.open .ec-body{max-height:600px;padding:var(--space-4);border-top:1px solid var(--border-subtle);}
+.era-card .ec-body p{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:var(--space-3);}
+.ec-label{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--space-2);}
+.ec-genres{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-3);}
+.ec-context{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);border-top:1px solid var(--border-muted);padding-top:var(--space-2);margin-top:var(--space-2);}
+
+/* ---------- Search ---------- */
+.search-box{position:relative;max-width:560px;margin-bottom:var(--space-5);}
+.search-box svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--text-muted);}
+.search-input{
+  width:100%;padding:14px 20px 14px 50px;border-radius:0px;
+  background:#0a0a0a;color:#fff;font-family:var(--font-mono);font-size:13px;font-weight:500;
+  border:1px solid var(--border-subtle); transition:border-color .15s, background .15s;
+}
+.search-input:focus{outline:none; border-color:#ffffff; background:#111111;}
+.search-input::placeholder{color:var(--text-muted);}
+.ai-suggest{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--space-5);}
+.ai-result{background:#0a0a0a;border-radius:0px;padding:var(--space-4);margin-bottom:var(--space-5);border-left:3px solid #ffffff; border-top:1px solid var(--border-subtle); border-right:1px solid var(--border-subtle); border-bottom:1px solid var(--border-subtle);}
+.ai-result .ai-q{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:var(--space-2);font-weight:700;}
+.ai-result .ai-a{font-size:13px;line-height:1.6;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);font-family:var(--font-mono);font-size:12px;}
+.empty-state .es-emoji{font-size:32px;margin-bottom:var(--space-3);opacity:0.5;}
+
+/* ---------- Taste DNA Profiler UI ---------- */
+.taste-container{max-width:760px; margin:0 auto; background:#0a0a0a; border:1px solid var(--border-subtle); border-radius:0px; padding:var(--space-6); position:relative;}
+.taste-step{display:flex; flex-direction:column; gap:var(--space-4); animation:fadeIn 0.3s ease;}
+.taste-step-title{font-size:18px; font-weight:700; color:#fff;}
+.taste-step-desc{font-size:13px; color:var(--text-secondary); margin-bottom:var(--space-2);}
+.taste-grid-toggle{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;}
+@media(max-width:520px){.taste-grid-toggle{grid-template-columns:repeat(2,1fr);}}
+.taste-option-btn{
+  padding:12px; border-radius:0px; background:#0d0d0d;
+  border:1px solid var(--border-subtle); transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:8px; font-family:var(--font-mono); font-size:12px; font-weight:600;
+}
+.taste-option-btn:hover{background:#161616; border-color:#8a8a8a;}
+.taste-option-btn.selected{
+  background:#ffffff; border-color:#ffffff; color:#000000;
+}
+.taste-progress{display:flex; justify-content:space-between; align-items:center; margin-top:var(--space-6); border-top:1px solid var(--border-subtle); padding-top:var(--space-4);}
+.taste-progress-dots{display:flex; gap:8px;}
+.tpd-dot{width:6px; height:6px; border-radius:0px; background:#222;}
+.tpd-dot.active{background:#ffffff;}
+
+/* Taste DNA Result Layout */
+.td-result{animation:fadeIn 0.5s ease;}
+.td-badge{display:inline-block; font-family:var(--font-mono); font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; background:#ffffff; color:#000000; padding:4px 10px; border-radius:0px; margin-bottom:8px;}
+.td-dna-name{font-size:26px; font-weight:800; color:#fff; margin-bottom:12px; letter-spacing:-1px;}
+.td-dna-desc{font-size:14px; color:var(--text-secondary); line-height:1.6; margin-bottom:var(--space-5);}
+.td-visual-row{display:grid; grid-template-columns:1.2fr 1fr; gap:var(--space-6); margin-bottom:var(--space-6);}
+@media(max-width:680px){.td-visual-row{grid-template-columns:1fr;}}
+.td-chart{background:#050505; border:1px solid var(--border-subtle); border-radius:0px; padding:var(--space-4); display:flex; flex-direction:column; gap:var(--space-3);}
+.td-chart-item{display:flex; flex-direction:column; gap:4px;}
+.td-chart-label{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--text-secondary);}
+.td-chart-bar{height:6px; background:#161616; border-radius:0px; overflow:hidden;}
+.td-chart-fill{height:100%; border-radius:0px; background:#ffffff; transition:width 1s ease;}
+
+/* ---------- Vibe Analyzer Drawer Panel ---------- */
+.vibe-analyzer {
+  position: fixed; top: 0; right: -420px; width: var(--vibe-drawer-w); height: 100vh;
+  background: #080808;
+  border-left: 1px solid var(--border-subtle);
+  z-index: 100; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex; flex-direction: column; overflow-y: auto; color: #fff;
+}
+.vibe-analyzer.open { right: 0; }
+.va-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--space-4) var(--space-5); border-bottom:1px solid var(--border-subtle);
+}
+.va-head h2{font-family:var(--font-mono); font-size:13px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--text-secondary);}
+.va-close{
+  width:28px; height:28px; border-radius:0px; background:#111;
+  display:grid; place-items:center; color:var(--text-secondary); transition:background .15s, color .15s;
+  border:1px solid var(--border-subtle);
+}
+.va-close:hover{background:#222; color:#fff;}
+.va-body{
+  flex:1; overflow-y:auto; padding:var(--space-5); display:flex; flex-direction:column; gap:var(--space-5);
+}
+.va-song-show{display:flex; flex-direction:column; align-items:center; text-align:center;}
+.va-art-wrap{
+  width:160px; height:160px; border-radius:0px; margin-bottom:var(--space-4);
+  position:relative;
+  display:grid; place-items:center; font-size:48px; border:1px solid var(--border-subtle);
+}
+.va-wave-glow{display:none;}
+.va-title{font-size:18px; font-weight:800; color:#fff; margin-bottom:4px; line-height:1.2; letter-spacing:-0.5px;}
+.va-artist{font-family:var(--font-mono); font-size:13px; color:var(--text-secondary); margin-bottom:var(--space-2);}
+
+/* Sleek Vibe Waveform & Player Inside Analyzer */
+.va-player-ctrl{
+  display:flex; flex-direction:column; align-items:center; gap:12px;
+  background:#0d0d0d; border:1px solid var(--border-subtle); border-radius:0px;
+  padding:var(--space-4); margin-bottom:4px;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+}
+.vap-row{display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); width:100%;}
+.vap-time{font-family:var(--font-mono); font-size:10.5px; color:var(--text-muted); font-variant-numeric:tabular-nums; width:35px; text-align:center;}
+.va-wave-svg{flex:1; height:32px; fill:#1a1a1a; cursor:pointer;}
+.va-bar{transition: height 0.08s ease, y 0.08s ease;}
+
+.player-btns-row {
+  display: flex; align-items: center; justify-content: center; gap: 16px; width: 100%; margin-top: 4px;
+}
+.player-btn {
+  background: none; border: none; color: var(--text-secondary); cursor: pointer; display: grid; place-items: center;
+  transition: color 0.15s, transform 0.15s; width: 28px; height: 28px; border-radius: 50%;
+}
+.player-btn:hover { color: #fff; transform: scale(1.08); }
+.player-btn.active { color: #ffffff; filter: drop-shadow(0 0 4px rgba(255,255,255,0.6)); }
+.player-btn.play-toggle {
+  background: #fff; color: #000; width: 36px; height: 36px;
+}
+.player-btn.play-toggle:hover { background: #e0e0e0; color: #000; transform: scale(1.05); }
+
+.vol-slider {
+  -webkit-appearance: none; appearance: none; flex: 1; max-width: 120px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.1); outline: none; cursor: pointer; transition: background 0.15s;
+}
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%;
+  background: #fff; transition: background 0.15s, transform 0.15s;
+}
+.vol-slider::-webkit-slider-thumb:hover {
+  background: #ffffff; transform: scale(1.2); box-shadow: 0 0 6px rgba(255,255,255,0.8);
+}
+
+.va-stats{
+  display:flex; flex-direction:column; gap:12px;
+  background:#0a0a0a; border:1px solid var(--border-subtle);
+  padding:var(--space-4); border-radius:0px;
+}
+.va-stat-row{display:flex; flex-direction:column; gap:4px;}
+.va-stat-lbl{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--text-muted);}
+.va-stat-track{height:6px; background:#161616; border-radius:0px; overflow:hidden;}
+.va-stat-fill{height:100%; border-radius:0px; background:#ffffff;}
+
+.va-anal-text{
+  font-size:12.5px; color:var(--text-secondary); line-height:1.6;
+  background:#0a0a0a; border:1px solid var(--border-subtle);
+  padding:var(--space-4); border-radius:0px; border-left:3px solid #ffffff;
+}
+
+/* ---------- Mobile Bottom Nav ---------- */
+.mobile-nav{display:none;}
+
+/* ---------- Responsive ---------- */
+@media(max-width:768px){
+  .global-header{padding:0 var(--space-4); height:60px;}
+  .header-nav{display:none;}
+  .header-left .topbar-nav{display:none;}
+  .main-inner{padding:var(--space-4) var(--space-4) 100px;}
+  .grid-3{grid-template-columns:repeat(2,1fr);gap:12px;}
+  .grid-2{grid-template-columns:1fr;gap:12px;}
+  .artist-grid{grid-template-columns:repeat(3,1fr);}
+  .section-title{font-size:18px;}
+  .hero{padding:24px var(--space-4); margin-bottom:var(--space-4);}
+  .chart-head{grid-template-columns:32px 1fr 60px 40px;}
+  .chart-row{grid-template-columns:32px 1fr 60px 40px; padding:10px; margin-bottom:6px;}
+  .chart-head .ch-genre,.chart-head .ch-year,.cr-genre-col,.cr-year{display:none;}
+  
+  .vibe-analyzer {
+    right: 0; bottom: -85vh; top: auto; width: 100%; height: 80vh;
+    border-left: none; border-top: 1px solid var(--border-subtle);
+    border-radius: 0px;
+    transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .vibe-analyzer.open { bottom: 56px; }
+  
+  .mobile-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;height:56px;z-index:60;
+    background:#000000;border-top:1px solid var(--border-subtle);
+  }
+  .mobile-nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--text-muted);}
+  .mobile-nav a svg{width:18px;height:18px;}
+  .mobile-nav a.active{color:#fff;}
+  .mobile-nav a.active svg{color:#ffffff;}
+  .artist-avatar{width:70px;height:70px;font-size:20px;}
+  .timeline{gap:20px;}
+}
+
+/* ---------- view fade ---------- */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.view{animation:fadeIn .25s ease;}
+@keyframes shimmer{0%,100%{opacity:.4;}50%{opacity:.8;}}
+.skeleton{animation:shimmer 1.5s ease infinite;background:#1a1a1a;}
+</style>
+</head>
+<body>
+<!-- Ambient background blobs -->
+<div class="ambient-bg">
+  <div class="ambient-blob ab1"></div>
+  <div class="ambient-blob ab2"></div>
+  <div class="ambient-blob ab3"></div>
+</div>
+
+<div class="app-container">
+  <header class="global-header" id="global-header">
+    <div class="header-left">
+      <a href="#home" class="nav-logo">
+        <span class="logo-mark" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.2"/><circle cx="11" cy="11" r="2.4" fill="currentColor"/><line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </span>
+        MusicLens
+      </a>
+      <div class="topbar-nav">
+        <button id="nav-back" aria-label="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button id="nav-fwd" aria-label="forward"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+    </div>
+    
+    <nav class="header-nav" id="header-nav"></nav>
+    
+    <div class="header-right">
+      <a href="intro.html" class="btn-outlined" data-ko="소개 페이지로" data-en="About MusicLens" data-ja="紹介ページへ" style="padding: 6px 12px; font-size: 11px; font-family: var(--font-mono); text-decoration: none; border-radius: 0; display: inline-flex; align-items: center; justify-content: center; height: 32px;">About MusicLens</a>
+      <div class="lang-toggle">
+        <button id="lang-ko" class="active" onclick="setLanguage('ko')">KO</button>
+        <button id="lang-en" onclick="setLanguage('en')">EN</button>
+        <button id="lang-ja" onclick="setLanguage('ja')">JA</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content" id="main-content">
+    <div class="main-inner" id="view-root"></div>
+  </main>
+</div>
+
+<!-- Vibe Analyzer slide-out drawer -->
+<div class="vibe-analyzer" id="vibe-analyzer"></div>
+
+<nav class="mobile-nav" id="mobile-nav"></nav>
+
+<script>
+/* ===================== DATA ===================== */
+const GENRES = [
+  {id:"pop",name:"Pop",nameKo:"팝",nameJa:"ポップ",color:"#ffffff",colorSecondary:"#8a8a8a",emoji:"●",description:"Universally appealing melodies with polished production",descriptionKo:"누구나 즐길 수 있는 세련된 대중음악. 귀에 쏙 들어오는 훅과 완성도 높은 프로덕션이 특징.",descriptionJa:"耳に残るキャッチーなメロディと、洗練されたプロダクションが特徴の大衆音楽。",eraOrigin:"1950s",subGenres:["synth-pop","indie-pop","k-pop","dream-pop","art-pop"],relatedGenres:["rnb","electronic","indie"],alsoListenTo:["indie","rnb","kpop","electronic"],characteristics:["Catchy hooks","Verse-chorus structure","Polished production","Wide vocal range"],topArtists:["Taylor Swift","The Weeknd","Dua Lipa","Harry Styles","Olivia Rodrigo"],listeners:2800000000},
+  {id:"hiphop",name:"Hip-Hop",nameKo:"힙합",nameJa:"ヒップホップ",color:"#e0e0e0",colorSecondary:"#737373",emoji:"■",description:"Rhythmic poetry over beats — born in the Bronx, shaped the world",descriptionKo:"브롱크스에서 태어난 리듬과 라임의 예술. 세계 문화를 재편한 장르.",descriptionJa:"ビートに乗せるリズムとライムの芸術。ブロンクスから生まれ、世界を再編した音楽。",eraOrigin:"1970s",subGenres:["trap","gangsta-rap","conscious-rap","boom-bap","drill","mumble-rap"],relatedGenres:["rnb","pop","electronic"],alsoListenTo:["rnb","pop","electronic"],characteristics:["Rhythmic flow","Sampling","Storytelling","Social commentary","Beat-driven"],topArtists:["Kendrick Lamar","Drake","Travis Scott","J. Cole","Kanye West"],listeners:2100000000},
+  {id:"rock",name:"Rock",nameKo:"록",nameJa:"ロック",color:"#d4d4d4",colorSecondary:"#525252",emoji:"▲",description:"Electric guitars, raw energy, rebellion — the backbone of modern music",descriptionKo:"일렉 기타의 포효. 반항의 에너지. 현대 음악의 척추.",descriptionJa:"エレキギターの咆哮と生々しいエネルギー、エンド反骨精神。現代音楽のバックボーン。",eraOrigin:"1950s",subGenres:["classic-rock","alternative","grunge","punk","indie-rock","post-rock"],relatedGenres:["metal","indie","punk"],alsoListenTo:["metal","indie","punk"],characteristics:["Electric guitar","Strong rhythm section","Powerful vocals","4/4 time"],topArtists:["Led Zeppelin","The Beatles","Nirvana","Radiohead","Red Hot Chili Peppers"],listeners:1900000000},
+  {id:"metal",name:"Metal",nameKo:"메탈",nameJa:"メタル",color:"#a3a3a3",colorSecondary:"#262626",emoji:"▼",description:"Crushing riffs, blast beats, and extreme intensity",descriptionKo:"파괴적인 리프, 폭발적인 비트, 극한의 강도. 강철 같은 음악.",descriptionJa:"重厚なリフ、爆発的なビート、そして極限のインテンシティが織りなす鋼鉄のサウンド。",eraOrigin:"1970s",subGenres:["heavy-metal","death-metal","black-metal","thrash-metal","prog-metal","doom-metal"],relatedGenres:["rock","punk","electronic"],alsoListenTo:["rock","classical","punk"],characteristics:["Down-tuned guitars","Double bass drum","Screaming/growling vocals","Complex time signatures"],topArtists:["Metallica","Black Sabbath","Slayer","Iron Maiden","Tool"],listeners:820000000},
+  {id:"electronic",name:"Electronic",nameKo:"일렉트로닉",nameJa:"エレクトロニック",color:"#ffffff",colorSecondary:"#404040",emoji:"◆",description:"Synthesizers, drum machines, and the art of sonic architecture",descriptionKo:"신디사이저와 드럼 머신으로 쌓아올린 소리의 건축. 클럽부터 헤드폰까지.",descriptionJa:"シンセサイザーとドラムマシンで構築された音響空間。クラブから日常のリスニングまで。",eraOrigin:"1970s",subGenres:["house","techno","drum-n-bass","ambient","edm","lo-fi","synthwave"],relatedGenres:["pop","hiphop","rnb"],alsoListenTo:["hiphop","pop","rnb"],characteristics:["Synthesized sounds","4-on-the-floor beat","Build and drop","BPM-driven"],topArtists:["Daft Punk","Aphex Twin","The Chemical Brothers","Caribou","Four Tet"],listeners:1600000000},
+  {id:"rnb",name:"R&B / Soul",nameKo:"알앤비 / 소울",nameJa:"R&B / ソウル",color:"#cccccc",colorSecondary:"#525252",emoji:"▬",description:"Silky grooves, emotional depth, rooted in gospel and blues",descriptionKo:"복음과 블루스에서 태어난 감성. 부드러운 그루브와 깊은 감정.",descriptionJa:"ソウルフルな歌声とシルキーなグルーヴ。ゴスペルとブルースに根ざした深い感情。",eraOrigin:"1940s",subGenres:["neo-soul","contemporary-r&b","gospel","funk","new-jack-swing"],relatedGenres:["pop","hiphop","jazz"],alsoListenTo:["hiphop","jazz","pop"],characteristics:["Melismatic vocals","Groove-based","Call and response","Emotional storytelling"],topArtists:["Beyoncé","Frank Ocean","SZA","D'Angelo","Erykah Badu"],listeners:1400000000},
+  {id:"jazz",name:"Jazz",nameKo:"재즈",nameJa:"ジャズ",color:"#b5b5b5",colorSecondary:"#404040",emoji:"✦",description:"Improvisation, complex harmony, and the sound of freedom",descriptionKo:"즉흥과 자유의 언어. 복잡한 화성과 끝없는 대화.",descriptionJa:"即興演奏と複雑なハーモニー。自由な対話から紡ぎ出される大人のサウンド。",eraOrigin:"1900s",subGenres:["bebop","cool-jazz","fusion","free-jazz","acid-jazz","nu-jazz"],relatedGenres:["blues","rnb","classical"],alsoListenTo:["blues","classical","rnb"],characteristics:["Improvisation","Swing feel","Complex chords","Call and response"],topArtists:["Miles Davis","John Coltrane","Bill Evans","Thelonious Monk","Herbie Hancock"],listeners:580000000},
+  {id:"classical",name:"Classical",nameKo:"클래식",nameJa:"クラシック",color:"#e5e5e5",colorSecondary:"#737373",emoji:"⬢",description:"Centuries of orchestral mastery — from baroque to contemporary",descriptionKo:"수백 년의 오케스트라 유산. 바로크부터 현대까지.",descriptionJa:"バロックから現代まで、数世紀にわたり継承されてきたオーケストラの至宝。",eraOrigin:"1600s",subGenres:["baroque","romantic","contemporary-classical","minimalist","opera","chamber"],relatedGenres:["jazz","metal","electronic"],alsoListenTo:["jazz","electronic"],characteristics:["Orchestral arrangement","Dynamic range","Formal structure","No percussion focus"],topArtists:["Ludwig van Beethoven","Wolfgang Amadeus Mozart","Johann Sebastian Bach","Frédéric Chopin","Max Richter"],listeners:450000000},
+  {id:"kpop",name:"K-Pop",nameKo:"케이팝",nameJa:"K-POP",color:"#f5f5f5",colorSecondary:"#8a8a8a",emoji:"○",description:"Korean pop phenomenon — perfect choreography meets global production",descriptionKo:"완벽한 퍼포먼스와 글로벌 프로덕션이 만난 한국발 팝 혁명.",descriptionJa:"一糸乱れぬパフォーマンスと、グローバル水準のハイクオリティな制作力が融合した韓国発のポップ現象。",eraOrigin:"1990s",subGenres:["idol-pop","k-r&b","k-hip-hop","k-indie","bg","gg"],relatedGenres:["pop","rnb","electronic"],alsoListenTo:["pop","rnb","electronic"],characteristics:["Group formations","Synchronized choreo","Multilingual lyrics","High production value"],topArtists:["BTS","BLACKPINK","aespa","NewJeans","SEVENTEEN"],listeners:920000000},
+  {id:"indie",name:"Indie",nameKo:"인디",nameJa:"インディー",color:"#909090",colorSecondary:"#333333",emoji:"⬚",description:"Independent spirit, lo-fi aesthetic, authentic over polished",descriptionKo:"독립 정신. 세련됨보다 진정성. 주류가 아닌 자신만의 길.",descriptionJa:"インディペンデント精神とローファイな美学。メインストリームにとらわれない独自の音楽世界。",eraOrigin:"1980s",subGenres:["indie-rock","indie-pop","dream-pop","shoegaze","folk-indie","bedroom-pop"],relatedGenres:["rock","pop","blues"],alsoListenTo:["rock","pop","electronic"],characteristics:["DIY aesthetic","Introspective lyrics","Unconventional structure","Authenticity"],topArtists:["Arctic Monkeys","Tame Impala","Sufjan Stevens","Bon Iver","Phoebe Bridgers"],listeners:1100000000},
+  {id:"latin",name:"Latin",nameKo:"라틴",nameJa:"ラテン",color:"#c2c2c2",colorSecondary:"#525252",emoji:"◄",description:"Infectious rhythms from salsa to reggaeton — Latin America's gift",descriptionKo:"살사부터 레게톤까지. 라틴 아메리카가 세계에 선물한 리듬.",descriptionJa:"サルサからレゲトンまで。ラテンアメリカから世界へ届けられた情熱的なリズム。",eraOrigin:"1950s",subGenres:["reggaeton","salsa","bachata","cumbia","latin-pop","trap-latino"],relatedGenres:["pop","rnb","electronic"],alsoListenTo:["pop","rnb","hiphop"],characteristics:["Clave rhythm","Call and response","Dance-focused","Polyrhythm"],topArtists:["Bad Bunny","J Balvin","Rosalía","Shakira","Daddy Yankee"],listeners:1300000000},
+  {id:"punk",name:"Punk",nameKo:"펑크",nameJa:"パンク",color:"#737373",colorSecondary:"#1f1f1f",emoji:"✖",description:"Fast, loud, political — 3 chords and the truth",descriptionKo:"빠르고 시끄럽고 정치적. 3개의 코드와 진실.",descriptionJa:"高速でラウド、そして政治的。スリーコードと真実が詰まったアティチュード。",eraOrigin:"1970s",subGenres:["hardcore","pop-punk","post-punk","ska-punk","emo","anarcho-punk"],relatedGenres:["rock","metal","indie"],alsoListenTo:["metal","rock","indie"],characteristics:["Fast tempo","Short songs","Raw production","Anti-establishment lyrics"],topArtists:["The Clash","Sex Pistols","Ramones","Green Day","Black Flag"],listeners:480000000},
+  {id:"reggae",name:"Reggae",nameKo:"레게",nameJa:"レゲエ",color:"#8a8a8a",colorSecondary:"#2b2b2b",emoji:"≋",description:"Jamaican rhythms of peace, love, and resistance",descriptionKo:"자메이카에서 온 평화, 사랑, 저항의 리듬.",descriptionJa:"ジャマイカから発信される、平和と愛と抵抗のリズム。",eraOrigin:"1960s",subGenres:["roots-reggae","dancehall","dub","ska","rocksteady"],relatedGenres:["latin","rnb","electronic"],alsoListenTo:["rnb","latin","electronic"],characteristics:["Offbeat rhythm","Bass-heavy","Positive lyrics","Ska influence"],topArtists:["Bob Marley","Peter Tosh","Damian Marley","Sean Paul","Protoje"],listeners:340000000},
+  {id:"blues",name:"Blues",nameKo:"블루스",nameJa:"ブルース",color:"#a8a8a8",colorSecondary:"#3c3c3c",emoji:"⧩",description:"The root of all modern music — twelve bars of pure feeling",descriptionKo:"모든 현대 음악의 뿌리. 12마디 안에 담긴 순수한 감정.",descriptionJa:"すべての現代ポピュラー音楽의源流。12小節の中に凝縮された純粋な哀愁。",eraOrigin:"1900s",subGenres:["delta-blues","chicago-blues","electric-blues","rhythm-and-blues","soul-blues"],relatedGenres:["jazz","rock","rnb"],alsoListenTo:["jazz","rock","rnb"],characteristics:["12-bar structure","Blue notes","Call and response","Guitar-centric"],topArtists:["B.B. King","Robert Johnson","Muddy Waters","Howlin Wolf","John Lee Hooker"],listeners:280000000},
+  {id:"country",name:"Country",nameKo:"컨트리",nameJa:"カントリー",color:"#9e9e9e",colorSecondary:"#4a4a4a",emoji:"⧓",description:"Stories of heartbreak, highways, and home — from Nashville to the world",descriptionKo:"이별, 도로, 고향. 내슈빌에서 세계로 뻗은 이야기 음악.",descriptionJa:"失恋や旅路、そして故郷を語るストーリーテリング。ナッシュビルから世界に届く叙情詩。",eraOrigin:"1920s",subGenres:["classic-country","outlaw-country","country-pop","bluegrass","country-rock","americana"],relatedGenres:["indie","rock","blues"],alsoListenTo:["indie","rock","blues"],characteristics:["Storytelling lyrics","Acoustic guitar","Twang","Steel guitar","Narrative structure"],topArtists:["Johnny Cash","Dolly Parton","Hank Williams","Morgan Wallen","Zach Bryan"],listeners:760000000},
+  {id:"jpop",name:"J-Pop",nameKo:"제이팝",nameJa:"J-POP",color:"#ededed",colorSecondary:"#666666",emoji:"◈",description:"Melodic hooks, complex chord progressions, and unique subcultures",descriptionKo:"독특한 멜로디와 풍성한 화성. 시티팝부터 서브컬처 음악까지 아우르는 일본의 대중음악.",descriptionJa:"キャッチーなメロディ、複雑なコード進行、そして独自のサブカルチャーを持つ日本のポピュラー音楽。",eraOrigin:"1970s",subGenres:["city-pop","shibuya-kei","anison","j-rock","vocaloid","kayokyoku"],relatedGenres:["pop","rock","electronic"],alsoListenTo:["pop","kpop","indie"],characteristics:["Complex chord progressions","Strong melodic lines","Diverse instrumentation","High energy"],topArtists:["Yoasobi","Kenshi Yonezu","Fujii Kaze","Utada Hikaru","King Gnu","X Japan"],listeners:850000000},
+  {id:"afrobeats",name:"Afrobeats",nameKo:"아프로비츠",nameJa:"アフロビーツ",color:"#cca625",colorSecondary:"#3a2805",emoji:"⏧",description:"Infectious West African grooves blending jazz, dancehall, and house beats",descriptionKo:"서아프리카에서 태어나 세계를 정복한 댄서블한 리듬. 하우스, 레게, 전통 타악기의 조화.",descriptionJa:"西アフリカから生まれ、世界を席巻するダンサブルなグルーヴ。ハウス、レゲエ、伝統打楽器의 融合。",eraOrigin:"2000s",subGenres:["afro-fusion","amapiano","azonto","highlife"],relatedGenres:["latin","rnb","electronic"],alsoListenTo:["latin","rnb","electronic"],characteristics:["Polyrhythmic beats","West African vocal harmonies","Syncopated percussion","High energy"],topArtists:["Burna Boy","Wizkid","Rema","Tems","Davido"],listeners:950000000}
+];
+
+const SONGS = [
+  {id:1,rank:1,title:"Flowers",artist:"Miley Cyrus",genre:"pop",year:2023,popularity:98,duration:"3:21",streamCount:2100000000,rankChange:0},
+  {id:2,rank:2,title:"As It Was",artist:"Harry Styles",genre:"pop",year:2022,popularity:97,duration:"2:37",streamCount:2800000000,rankChange:-1},
+  {id:3,rank:3,title:"Blinding Lights",artist:"The Weeknd",genre:"pop",year:2019,popularity:96,duration:"3:20",streamCount:3800000000,rankChange:1},
+  {id:4,rank:4,title:"HUMBLE.",artist:"Kendrick Lamar",genre:"hiphop",year:2017,popularity:95,duration:"2:57",streamCount:1900000000,rankChange:2},
+  {id:5,rank:5,title:"God's Plan",artist:"Drake",genre:"hiphop",year:2018,popularity:94,duration:"3:19",streamCount:2200000000,rankChange:-1},
+  {id:6,rank:6,title:"STAY",artist:"The Kid LAROI & Justin Bieber",genre:"pop",year:2021,popularity:93,duration:"2:21",streamCount:2500000000,rankChange:3},
+  {id:7,rank:7,title:"Dynamite",artist:"BTS",genre:"kpop",year:2020,popularity:92,duration:"3:19",streamCount:1700000000,rankChange:0},
+  {id:8,rank:8,title:"drivers license",artist:"Olivia Rodrigo",genre:"pop",year:2021,popularity:91,duration:"4:02",streamCount:1600000000,rankChange:-2},
+  {id:9,rank:9,title:"Levitating",artist:"Dua Lipa",genre:"pop",year:2020,popularity:90,duration:"3:23",streamCount:1800000000,rankChange:1},
+  {id:10,rank:10,title:"SICKO MODE",artist:"Travis Scott",genre:"hiphop",year:2018,popularity:89,duration:"5:12",streamCount:1500000000,rankChange:0},
+  {id:11,rank:11,title:"Bohemian Rhapsody",artist:"Queen",genre:"rock",year:1975,popularity:95,duration:"5:55",streamCount:2400000000,rankChange:0},
+  {id:12,rank:12,title:"Hotel California",artist:"Eagles",genre:"rock",year:1977,popularity:94,duration:"6:30",streamCount:1300000000,rankChange:1},
+  {id:13,rank:13,title:"Enter Sandman",artist:"Metallica",genre:"metal",year:1991,popularity:92,duration:"5:31",streamCount:900000000,rankChange:-1},
+  {id:14,rank:14,title:"One More Time",artist:"Daft Punk",genre:"electronic",year:2000,popularity:90,duration:"5:20",streamCount:1200000000,rankChange:2},
+  {id:15,rank:15,title:"Lose Yourself",artist:"Eminem",genre:"hiphop",year:2002,popularity:93,duration:"5:26",streamCount:1800000000,rankChange:0},
+  {id:16,rank:16,title:"Pink + White",artist:"Frank Ocean",genre:"rnb",year:2016,popularity:89,duration:"3:05",streamCount:800000000,rankChange:3},
+  {id:17,rank:17,title:"All of Me",artist:"John Legend",genre:"rnb",year:2013,popularity:91,duration:"4:29",streamCount:2100000000,rankChange:0},
+  {id:18,rank:18,title:"Take Five",artist:"Dave Brubeck",genre:"jazz",year:1959,popularity:88,duration:"5:24",streamCount:400000000,rankChange:1},
+  {id:19,rank:19,title:"Moonlight Sonata",artist:"Ludwig van Beethoven",genre:"classical",year:1801,popularity:87,duration:"15:00",streamCount:350000000,rankChange:0},
+  {id:20,rank:20,title:"Butter",artist:"BTS",genre:"kpop",year:2021,popularity:90,duration:"2:44",streamCount:1400000000,rankChange:-2},
+  {id:21,rank:21,title:"Espresso",artist:"Sabrina Carpenter",genre:"pop",year:2024,popularity:96,duration:"2:55",streamCount:1600000000,rankChange:5},
+  {id:22,rank:22,title:"Die With A Smile",artist:"Lady Gaga & Bruno Mars",genre:"pop",year:2024,popularity:95,duration:"4:11",streamCount:1500000000,rankChange:4},
+  {id:23,rank:23,title:"APT.",artist:"ROSÉ & Bruno Mars",genre:"kpop",year:2024,popularity:94,duration:"2:51",streamCount:1300000000,rankChange:6},
+  {id:24,rank:24,title:"Like Crazy",artist:"Jimin",genre:"kpop",year:2023,popularity:88,duration:"3:27",streamCount:900000000,rankChange:-1},
+  {id:25,rank:25,title:"Vampire",artist:"Olivia Rodrigo",genre:"pop",year:2023,popularity:91,duration:"3:39",streamCount:1200000000,rankChange:0},
+  {id:26,rank:26,title:"Rich Flex",artist:"Drake & 21 Savage",genre:"hiphop",year:2022,popularity:89,duration:"3:58",streamCount:1100000000,rankChange:-3},
+  {id:27,rank:27,title:"Numb / Encore",artist:"Jay-Z & Linkin Park",genre:"rock",year:2004,popularity:87,duration:"3:24",streamCount:750000000,rankChange:1},
+  {id:28,rank:28,title:"Smells Like Teen Spirit",artist:"Nirvana",genre:"rock",year:1991,popularity:96,duration:"5:01",streamCount:1500000000,rankChange:0},
+  {id:29,rank:29,title:"Con Calma",artist:"Daddy Yankee & Snow",genre:"latin",year:2019,popularity:88,duration:"3:15",streamCount:1900000000,rankChange:-2},
+  {id:30,rank:30,title:"Tití Me Preguntó",artist:"Bad Bunny",genre:"latin",year:2022,popularity:90,duration:"3:57",streamCount:1000000000,rankChange:2},
+  {id:31,rank:31,title:"Idol",artist:"YOASOBI",genre:"jpop",year:2023,popularity:97,duration:"3:33",streamCount:650000000,rankChange:4},
+  {id:32,rank:32,title:"Lemon",artist:"Kenshi Yonezu",genre:"jpop",year:2018,popularity:94,duration:"4:15",streamCount:800000000,rankChange:2},
+  {id:33,rank:33,title:"Shinunoga E-Wa",artist:"Fujii Kaze",genre:"jpop",year:2020,popularity:92,duration:"3:05",streamCount:450000000,rankChange:0},
+  {id:34,rank:34,title:"First Love",artist:"Utada Hikaru",genre:"jpop",year:1999,popularity:91,duration:"4:17",streamCount:380000000,rankChange:-1},
+  {id:35,rank:35,title:"Stay With Me",artist:"Miki Matsubara",genre:"jpop",year:1979,popularity:93,duration:"5:12",streamCount:500000000,rankChange:5},
+  {id:36,rank:36,title:"Plastic Love",artist:"Mariya Takeuchi",genre:"jpop",year:1984,popularity:89,duration:"4:51",streamCount:300000000,rankChange:-2},
+  {id:37,rank:37,title:"SPECIALZ",artist:"King Gnu",genre:"jpop",year:2023,popularity:95,duration:"3:58",streamCount:250000000,rankChange:3},
+  {id:38,rank:38,title:"Night Dancer",artist:"imase",genre:"jpop",year:2022,popularity:90,duration:"3:30",streamCount:350000000,rankChange:0},
+  {id:39,rank:39,title:"Endless Rain",artist:"X Japan",genre:"jpop",year:1989,popularity:87,duration:"6:35",streamCount:150000000,rankChange:-3},
+  {id:40,rank:40,title:"Yoru ni Kakeru",artist:"YOASOBI",genre:"jpop",year:2019,popularity:94,duration:"4:21",streamCount:700000000,rankChange:1},
+  {id:41,rank:41,title:"bad guy",artist:"Billie Eilish",genre:"pop",year:2019,popularity:95,duration:"3:14",streamCount:2300000000,rankChange:2},
+  {id:42,rank:42,title:"Hype Boy",artist:"NewJeans",genre:"kpop",year:2022,popularity:92,duration:"2:59",streamCount:600000000,rankChange:4},
+  {id:43,rank:43,title:"Get Lucky",artist:"Daft Punk",genre:"electronic",year:2013,popularity:91,duration:"4:08",streamCount:1100000000,rankChange:1},
+  {id:44,rank:44,title:"Not Like Us",artist:"Kendrick Lamar",genre:"hiphop",year:2024,popularity:98,duration:"4:34",streamCount:850000000,rankChange:6},
+  {id:45,rank:45,title:"Do I Wanna Know?",artist:"Arctic Monkeys",genre:"rock",year:2013,popularity:93,duration:"4:32",streamCount:1900000000,rankChange:-1},
+  {id:46,rank:46,title:"Chanel",artist:"Frank Ocean",genre:"rnb",year:2017,popularity:90,duration:"3:30",streamCount:950000000,rankChange:0},
+  {id:47,rank:47,title:"So What",artist:"Miles Davis",genre:"jazz",year:1959,popularity:86,duration:"9:22",streamCount:180000000,rankChange:-2},
+  {id:48,rank:48,title:"Nocturne Op. 9 No. 2",artist:"Frédéric Chopin",genre:"classical",year:1832,popularity:89,duration:"4:30",streamCount:450000000,rankChange:-1},
+  {id:49,rank:49,title:"Three Little Birds",artist:"Bob Marley & The Wailers",genre:"reggae",year:1977,popularity:90,duration:"3:00",streamCount:850000000,rankChange:1},
+  {id:50,rank:50,title:"Hurt",artist:"Johnny Cash",genre:"country",year:2002,popularity:88,duration:"3:38",streamCount:600000000,rankChange:-3},
+  {id:51,rank:51,title:"Ye",artist:"Burna Boy",genre:"afrobeats",year:2018,popularity:90,duration:"3:51",streamCount:600000000,rankChange:2},
+  {id:52,rank:52,title:"Calm Down",artist:"Rema & Selena Gomez",genre:"afrobeats",year:2022,popularity:96,duration:"3:59",streamCount:1400000000,rankChange:5},
+  {id:53,rank:53,title:"Essence",artist:"Wizkid",genre:"afrobeats",year:2020,popularity:89,duration:"4:08",streamCount:500000000,rankChange:0},
+  {id:54,rank:54,title:"Please Please Please",artist:"Sabrina Carpenter",genre:"pop",year:2024,popularity:95,duration:"3:06",streamCount:800000000,rankChange:4},
+  {id:55,rank:55,title:"Super Shy",artist:"NewJeans",genre:"kpop",year:2023,popularity:92,duration:"2:34",streamCount:650000000,rankChange:1},
+  {id:56,rank:56,title:"Matsuri",artist:"Fujii Kaze",genre:"jpop",year:2022,popularity:88,duration:"3:45",streamCount:200000000,rankChange:-1},
+  {id:57,rank:57,title:"Wonderwall",artist:"Oasis",genre:"rock",year:1995,popularity:94,duration:"4:18",streamCount:2100000000,rankChange:0},
+  {id:58,rank:58,title:"Harder, Better, Faster, Stronger",artist:"Daft Punk",genre:"electronic",year:2001,popularity:91,duration:"3:44",streamCount:850000000,rankChange:1},
+  {id:59,rank:59,title:"Autumn Leaves",artist:"Bill Evans Trio",genre:"jazz",year:1960,popularity:85,duration:"6:00",streamCount:120000000,rankChange:-2},
+  {id:60,rank:60,title:"Bad Romance",artist:"Lady Gaga",genre:"pop",year:2009,popularity:93,duration:"4:54",streamCount:1100000000,rankChange:0}
+];
+
+const ERAS = [
+  {decade:"1950s",title:"Rock & Roll 혁명",titleEn:"The Rock & Roll Revolution",titleJa:"ロックンロール革命",color:"#ffffff",gradient:"linear-gradient(135deg,#7c7c7c,#1f1f1f)",dominantGenres:["rock","blues","country","jazz"],keyArtists:["Elvis Presley","Chuck Berry","Little Richard","Ray Charles","Buddy Holly"],description:"로큰롤이 블루스와 컨트리의 혼합으로 탄생. 젊은 세대의 반란이 음악을 영원히 바꿨다.",descriptionEn:"Rock and roll emerged from the fusion of blues and country. Youth rebellion changed music forever.",descriptionJa:"ブルースとカントリーの融合からロックンロールが誕生。若者の反乱が音楽を永遠に変えた。",culturalContext:"Post-WWII, baby boom, television era",birth:"로큰롤 탄생 ▲"},
+  {decade:"1960s",title:"사이키델릭 & 무브먼트",titleEn:"Psychedelic Era & Social Movement",titleJa:"サイケデリック＆ムーブメント",color:"#e5e5e5",gradient:"linear-gradient(135deg,#6e6e6e,#1a1a1a)",dominantGenres:["rock","pop","blues","indie"],keyArtists:["The Beatles","The Rolling Stones","Jimi Hendrix","Bob Dylan","Janis Joplin"],description:"영국 인베이전, 히피 운동, 반전 운동. 음악이 사회 변혁의 언어가 됐다.",descriptionEn:"British Invasion, hippie movement, anti-war protests. Music became the language of social change.",descriptionJa:"ブリティッシュ・インヴェイジョン、ヒッピー運動、反戦運動。音楽が社会変革の言語となった。",culturalContext:"Vietnam War, civil rights movement, moon landing",birth:"레게 태동 ≋"},
+  {decade:"1970s",title:"장르의 폭발",titleEn:"Genre Explosion",titleJa:"ジャンルの爆発",color:"#cccccc",gradient:"linear-gradient(135deg,#606060,#161616)",dominantGenres:["rock","metal","punk","rnb","reggae","hiphop"],keyArtists:["Led Zeppelin","Black Sabbath","The Clash","Donna Summer","Bob Marley","DJ Kool Herc"],description:"헤비메탈, 펑크, 디스코, 힙합의 탄생. 하나의 '음악'이 수십 개의 문화권으로 분화.",descriptionEn:"Birth of heavy metal, punk, disco, hip-hop. Music fractured into dozens of distinct cultures.",descriptionJa:"ヘヴィメタル、パンク、ディスコ、ヒップホップの誕生。一つの「音楽」が多様なカルチャーへと分化。",culturalContext:"Oil crisis, counterculture, NYC urban decline, Bronx block parties",birth:"힙합 탄생 ■"},
+  {decade:"1980s",title:"신스팝 & MTV 시대",titleEn:"Synth Revolution & MTV Era",titleJa:"シンセポップ＆MTV時代",color:"#b5b5b5",gradient:"linear-gradient(135deg,#525252,#121212)",dominantGenres:["pop","rock","metal","electronic","hiphop","jpop"],keyArtists:["Michael Jackson","Madonna","Prince","Metallica","Run-DMC","Depeche Mode"],description:"MTV의 등장으로 시각 아이덴티티가 필수가 됐다. 신디사이저가 음악을 재정의했고, 힙합이 뿌리를 내렸다.",descriptionEn:"MTV made visual identity essential. Synthesizers redefined sound, hip-hop took root.",descriptionJa:"MTVの登場で視覚的アイデンティティが必須に。シンセサイザーが音を再定義し、ヒップホップが定着した。",culturalContext:"Cold War, Reagan era, crack epidemic, AIDS crisis",birth:"인디 등장 ⬚"},
+  {decade:"1990s",title:"그런지 & 황금기",titleEn:"Grunge, Golden Ages",titleJa:"グランジ＆黄金期",color:"#a3a3a3",gradient:"linear-gradient(135deg,#444444,#0e0e0e)",dominantGenres:["rock","hiphop","rnb","pop","electronic"],keyArtists:["Nirvana","Tupac","Biggie","Mariah Carey","Radiohead","Daft Punk"],description:"그런지가 헤어밴드를 몰아냈고, 힙합 황금기가 열렸다. R&B는 최고의 정점을 맞았다.",descriptionEn:"Grunge killed hair metal, hip-hop's golden age arrived. R&B reached its commercial peak.",descriptionJa:"グランジがヘアメタルを駆逐し、ヒップホップの黄金期が到来。R&Bは商業的ピークに達した。",culturalContext:"Internet birth, globalization, cassette → CD transition",birth:"K-Pop 태동 ○"},
+  {decade:"2000s",title:"디지털 혁명",titleEn:"Digital Revolution",titleJa:"デジタル革命",color:"#909090",gradient:"linear-gradient(135deg,#363636,#0a0a0a)",dominantGenres:["pop","hiphop","rock","electronic","rnb"],keyArtists:["Eminem","Beyoncé","Linkin Park","Kanye West","Amy Winehouse","The Strokes"],description:"냅스터와 아이팟이 음악 산업을 뒤집었다. 팝펑크와 이모가 10대를 사로잡았다.",descriptionEn:"Napster and iPod disrupted the industry. Pop-punk and emo captured a generation.",descriptionJa:"NapsterとiPodが音楽産業を再編。ポップパンクとエモが世代を魅了した。",culturalContext:"9/11, Iraq War, social media birth, piracy crisis",birth:"디지털 스트리밍 ◆"},
+  {decade:"2010s",title:"스트리밍 & K-Pop 글로벌화",titleEn:"Streaming Era & K-Pop Goes Global",titleJa:"ストリーミング＆K-POPグローバル化",color:"#7c7c7c",gradient:"linear-gradient(135deg,#282828,#070707)",dominantGenres:["pop","hiphop","electronic","kpop","indie"],keyArtists:["Drake","Taylor Swift","BTS","Kendrick Lamar","Adele","Frank Ocean"],description:"스포티파이가 음악 소비를 바꿨다. K-Pop이 글로벌 현상이 됐다. 트랩이 힙합을 접수했다.",descriptionEn:"Spotify transformed consumption. K-Pop became a global phenomenon. Trap took over hip-hop.",descriptionJa:"Spotifyが消費行動を変え、K-POPが世界的な現象に。トラップがヒップホップを席巻した。",culturalContext:"Smartphone dominance, social media virality, streaming wars",birth:"트랩 지배 ●"},
+  {decade:"2020s",title:"하이퍼팝 & 장르의 해체",titleEn:"Hyperpop & Genre Dissolution",titleJa:"ハイパーポップ＆ジャンルの解体",color:"#686868",gradient:"linear-gradient(135deg,#1a1a1a,#050505)",dominantGenres:["pop","hiphop","kpop","electronic","indie","jpop"],keyArtists:["Olivia Rodrigo","Bad Bunny","Doja Cat","Tyler the Creator","NewJeans","Sabrina Carpenter"],description:"장르 경계가 무너졌다. 아프로비츠, 하이퍼팝, 베드룸팝이 부상. TikTok이 새로운 차트가 됐다.",descriptionEn:"Genre boundaries dissolved. Afrobeats, hyperpop, bedroom pop rose. TikTok became the new chart.",descriptionJa:"ジャンルの境界線が消失。アフロビーツ、ハイパーポップ、ベッドルームポップが台頭し、TikTokが新たなヒットチャートとなった。",culturalContext:"COVID-19, home studios, TikTok virality, global music democratization",birth:""}
+];
+
+/* ===================== STATE & HELPERS ===================== */
+let currentLang = 'ko';
+const genreById = id => GENRES.find(g => g.id === id);
+const t = (ko, en, ja) => {
+  if (currentLang === 'ko') return ko;
+  if (currentLang === 'ja') return ja || en;
+  return en;
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ===================== ALBUM ART CACHE & FETCHER ===================== */
+const albumArtCache = JSON.parse(localStorage.getItem('ml_album_art_cache') || '{}');
+const audioPreviewCache = JSON.parse(localStorage.getItem('ml_audio_preview_cache') || '{}');
+let currentAudio = null;
+
+function saveAlbumArtCache() {
+  localStorage.setItem('ml_album_art_cache', JSON.stringify(albumArtCache));
+}
+
+const pendingArtRequests = {};
+
+function fetchAndCacheAlbumArt(song, playImmediately = false) {
+  if (albumArtCache[song.id] && audioPreviewCache[song.id]) {
+    if (playImmediately) {
+      playAudio(audioPreviewCache[song.id]);
+    }
+    return;
+  }
+  if (pendingArtRequests[song.id]) return;
+  pendingArtRequests[song.id] = true;
+  
+  const query = encodeURIComponent(`${song.artist} ${song.title}`);
+  fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const url = result.artworkUrl100.replace('100x100bb.jpg', '500x500bb.jpg');
+        albumArtCache[song.id] = url;
+        saveAlbumArtCache();
+        updateArtworkElements(song.id, url);
+        
+        if (result.previewUrl) {
+          audioPreviewCache[song.id] = result.previewUrl;
+          localStorage.setItem('ml_audio_preview_cache', JSON.stringify(audioPreviewCache));
+          if (playImmediately && npState.song && npState.song.id === song.id && npState.playing) {
+            playAudio(result.previewUrl);
+          }
+        }
+      }
+    })
+    .catch(err => console.error(`Failed to fetch album art/preview for ${song.title}:`, err))
+    .finally(() => {
+      delete pendingArtRequests[song.id];
+    });
+}
+
+function updateArtworkElements(songId, url) {
+  document.querySelectorAll(`.art-thumb[data-art-song-id="${songId}"]`).forEach(el => {
+    el.style.backgroundImage = `url('${url}')`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+    const span = el.querySelector('span');
+    if (span) span.style.display = 'none';
+  });
+  document.querySelectorAll(`.va-art-wrap[data-art-song-id="${songId}"]`).forEach(el => {
+    el.style.backgroundImage = `url('${url}')`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+    const span = el.querySelector('span');
+    if (span) span.style.display = 'none';
+  });
+}
+
+function fmtListeners(n){
+  if(n >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + 'B';
+  if(n >= 1e6) return (n/1e6).toFixed(0) + 'M';
+  return n.toLocaleString();
+}
+function durToSec(d){const [m,s]=d.split(':').map(Number);return m*60+s;}
+function secToDur(sec){const m=Math.floor(sec/60);const s=Math.floor(sec%60);return m+':'+String(s).padStart(2,'0');}
+
+/* gradient placeholder — swappable with real album art later */
+function artGradient(genreId){
+  const g = genreById(genreId);
+  if(!g) return 'linear-gradient(135deg,#333,#555)';
+  return `linear-gradient(135deg,${g.color},${g.colorSecondary})`;
+}
+function artHTML(song, extraClass=''){
+  const g = genreById(song.genre);
+  const cachedUrl = albumArtCache[song.id];
+  const styleAttr = cachedUrl 
+    ? `background-image: url('${cachedUrl}'); background-size: cover; background-position: center;` 
+    : `background: ${artGradient(song.genre)};`;
+  
+  if (!cachedUrl) {
+    fetchAndCacheAlbumArt(song);
+  }
+  
+  return `<div class="art-thumb ${extraClass}" data-art-song-id="${song.id}" style="${styleAttr}">
+    <span style="opacity:.55; ${cachedUrl ? 'display:none;' : ''}">${g?g.emoji:'●'}</span>
+  </div>`;
+}
+function genreTagHTML(genreId){
+  const g = genreById(genreId);
+  if(!g) return '';
+  return `<span class="genre-tag"><span class="gt-dot" style="background:${g.color}"></span>${t(g.nameKo,g.name)}</span>`;
+}
+const initials = name => name.split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+function avatarColor(name){
+  let h=0; for(let i=0;i<name.length;i++) h=name.charCodeAt(i)+((h<<5)-h);
+  return `hsl(0,0%,${25 + Math.abs(h)%35}%)`;
+}
+
+/* ===================== SVG ICONS ===================== */
+const ICON = {
+  home:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  chart:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  genres:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+  timeline:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  search:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  taste:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/></svg>',
+  play:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  pause:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>',
+  prev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>',
+  next:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-10.5 12l8.5-6-8.5-6z"/></svg>',
+  volume:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
+  close:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+};
+
+/* ===================== ROUTER ===================== */
+const routes = {
+  '#home': renderHome, '#genres': renderGenres,
+  '#search': renderSearch, '#timeline': renderTimeline, '#taste': renderTaste,
+};
+function handleRoute(){
+  const hash = location.hash || '#home';
+  const root = document.getElementById('view-root');
+  root.scrollTop = 0;
+  document.getElementById('main-content').scrollTop = 0;
+  let view = hash;
+  if(hash.startsWith('#genre/')){
+    renderGenreDetail(hash.replace('#genre/',''));
+    view = '#genres';
+  } else if(hash.startsWith('#artist/')){
+    renderArtistDetail(decodeURIComponent(hash.replace('#artist/','')));
+    view = '';
+  } else {
+    (routes[hash] || renderHome)();
+  }
+  updateActiveNav(view);
+}
+window.addEventListener('hashchange', handleRoute);
+
+/* ===================== NAV ===================== */
+const NAV_ITEMS = [
+  {hash:'#genres',ko:'장르 탐색',en:'Genres',ja:'ジャンル探索',ic:'genres'},
+  {hash:'#timeline',ko:'시대별 역사',en:'Timeline',ja:'年代別の歴史',ic:'timeline'},
+  {hash:'#taste',ko:'취향 DNA',en:'Taste DNA',ja:'好みDNA',ic:'taste'},
+  {hash:'#search',ko:'바이브 검색',en:'Vibe Search',ja:'バイブ検索',ic:'search'},
+];
+function renderNav(){
+  document.getElementById('header-nav').innerHTML = NAV_ITEMS.map(n =>
+    `<a class="nav-link" href="${n.hash}" data-hash="${n.hash}">
+      <span class="nav-ic">${ICON[n.ic]}</span>
+      <span data-ko="${n.ko}" data-en="${n.en}" data-ja="${n.ja}">${t(n.ko, n.en, n.ja)}</span>
+    </a>`).join('');
+  document.getElementById('mobile-nav').innerHTML = NAV_ITEMS.map(n =>
+    `<a href="${n.hash}" data-hash="${n.hash}">${ICON[n.ic]}<span data-ko="${n.ko}" data-en="${n.en}" data-ja="${n.ja}">${t(n.ko, n.en, n.ja)}</span></a>`).join('');
+}
+function updateActiveNav(hash){
+  document.querySelectorAll('.nav-link, .mobile-nav a').forEach(el => {
+    el.classList.toggle('active', el.dataset.hash === hash);
+  });
+}
+
+/* ===================== LANGUAGE ===================== */
+function setLanguage(lang){
+  currentLang = lang;
+  document.getElementById('lang-ko').classList.toggle('active', lang==='ko');
+  document.getElementById('lang-en').classList.toggle('active', lang==='en');
+  document.getElementById('lang-ja').classList.toggle('active', lang==='ja');
+  document.documentElement.lang = lang;
+  applyLang();
+  handleRoute();
+}
+function applyLang(){
+  document.querySelectorAll('[data-ko]').forEach(el => {
+    if (currentLang === 'ko') {
+      el.textContent = el.dataset.ko;
+    } else if (currentLang === 'ja') {
+      el.textContent = el.dataset.ja || el.dataset.en;
+    } else {
+      el.textContent = el.dataset.en;
+    }
+  });
+}
+
+/* ===================== RENDER: HOME ===================== */
+function songCardHTML(song){
+  return `<div class="song-card" onclick="playSong(${song.id})">
+    ${artHTML(song)}
+    <div class="sc-play"><button class="btn-play sm" onclick="event.stopPropagation();playSong(${song.id})">${ICON.play}</button></div>
+    <div class="sc-title">${esc(song.title)}</div>
+    <div class="sc-artist"><a href="#artist/${encodeURIComponent(song.artist)}" onclick="event.stopPropagation()" style="color:inherit; text-decoration:none; cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc(song.artist)}</a></div>
+    <div class="sc-meta">${genreTagHTML(song.genre)}</div>
+  </div>`;
+}
+function featuredGenreCardHTML(g){
+  return `<a class="genre-card" href="#genre/${g.id}" style="background:linear-gradient(150deg,${g.color},${g.colorSecondary})">
+    <div class="gc-emoji">${g.emoji}</div>
+    <div>
+      <div class="gc-name">${t(g.nameKo,g.name,g.nameJa)}<small>${g.id==='rnb'?'R&B / Soul':esc(g.name)}</small></div>
+      <div class="gc-artists">${g.topArtists.slice(0,3).map(esc).join(' · ')}</div>
+    </div>
+    <div class="gc-foot">
+      <div class="listeners-bar">
+        <div class="lb-label">${fmtListeners(g.listeners)} ${t('청취자','listeners','リスナー')}</div>
+      </div>
+      <span class="gc-go">${t('탐색','Explore','探索')} →</span>
+    </div>
+  </a>`;
+}
+function renderHome(){
+  const trending = [...SONGS].sort((a,b)=>b.popularity-a.popularity).slice(0,8);
+  const featured = ['pop','hiphop','rock','electronic','kpop','jazz'].map(genreById);
+  // Dynamically select a genre daily for Weekly Discovery
+  const discoverySeed = (new Date().getDate() + new Date().getMonth()) % GENRES.length;
+  const popG = GENRES[discoverySeed] || GENRES[0];
+  const eras = [ERAS[ERAS.length-1], ERAS[4]];
+  const html = `<div class="view">
+    <section class="hero">
+      <div class="hero-bg"><div class="hero-blob b1"></div><div class="hero-blob b2"></div><div class="hero-blob b3"></div></div>
+      <h1 data-ko="음악의 모든 장르를 탐험하다" data-en="Explore Every Genre" data-ja="音楽のすべてのジャンルを探索する">${t('음악의 모든 장르를 탐험하다','Explore Every Genre','音楽のすべてのジャンルを探索する')}</h1>
+      <p data-ko="음악의 모든 장르를 탐험하다 · 당신의 취향을 발견하세요" data-en="Explore Every Genre · Discover Your Taste" data-ja="すべてのジャンルを探索 · あなたの好みの発見">${t('음악의 모든 장르를 탐험하다 · 당신의 취향을 발견하세요','Explore Every Genre · Discover Your Taste','すべてのジャンルを探索 · あなたの好みの発見')}</p>
+      <a class="btn-primary" href="#genres">${t('장르 탐색 시작','Start Exploring','ジャンル探索を始める')} →</a>
+    </section>
+ 
+    <section class="section">
+      <div class="section-head"><div><div class="section-title">${t('지금 트렌딩','Trending Now','今トレンド')}</div><div class="section-subtitle">${t('가장 뜨거운 곡들','The hottest tracks right now','今最もホットな楽曲')}</div></div><a class="see-all" href="#genres">${t('전체 보기','See all','すべて見る')}</a></div>
+      <div class="horizontal-scroll">${trending.map(songCardHTML).join('')}</div>
+    </section>
+ 
+    <section class="section">
+      <div class="section-head"><div><div class="section-title">${t('장르 쇼케이스','Featured Genres','注目のジャンル')}</div><div class="section-subtitle">${t('탐험할 준비가 된 사운드',"Sounds ready to explore",'探索する準備ができたサウンド')}</div></div><a class="see-all" href="#genres">${t('전체 보기','See all','すべて見る')}</a></div>
+      <div class="grid-3">${featured.map(featuredGenreCardHTML).join('')}</div>
+    </section>
+ 
+    <section class="section">
+      <div class="section-head"><div><div class="section-title">${t('이번 주 발견','Weekly Discovery','今週의 발견')}</div><div class="section-subtitle">${t('이 장르 듣는 사람이 듣는 다른 장르','What fans of this genre also enjoy','このジャンルのファンが好む他のジャンル')}</div></div></div>
+      <div class="ai-result">
+        <div class="ai-q">${t('팝을 좋아한다면','If you love Pop','ポップが好きなら')} ${popG.emoji}</div>
+        <div class="ai-a">${t('이런 장르도 좋아할 거예요','You might also love','こんなジャンルもおすすめです')} → ${popG.alsoListenTo.map(id=>{const g=genreById(id);return g?`<a href="#genre/${g.id}" style="color:${g.color};font-weight:700">${t(g.nameKo,g.name,g.nameJa)}</a>`:''}).filter(Boolean).join(', ')}</div>
+      </div>
+    </section>
+ 
+    <section class="section">
+      <div class="section-head"><div><div class="section-title">${t('시대별 스냅샷','Era Snapshot','年代別スナップショット')}</div><div class="section-subtitle">${t('음악의 시간을 거슬러','Travel back through music history','音楽の時間をさかのぼる')}</div></div><a class="see-all" href="#timeline">${t('타임라인','Timeline','タイムライン')}</a></div>
+      <div class="grid-2">${eras.map(homeEraCardHTML).join('')}</div>
+    </section>
+  </div>`;
+  document.getElementById('view-root').innerHTML = html;
+  applyLang();
+}
+
+/* ===================== RENDER: GENRES ===================== */
+let genreSort = 'all';
+function renderGenres(){
+  let list = [...GENRES];
+  if(genreSort==='era') list.sort((a,b)=>parseInt(a.eraOrigin)-parseInt(b.eraOrigin));
+  else if(genreSort==='popular') list.sort((a,b)=>b.listeners-a.listeners);
+  else if(genreSort==='alpha') list.sort((a,b)=>a.name.localeCompare(b.name));
+  const filters = [['all','전체','All','すべて'],['era','시대순','By era','年代順'],['popular','인기순','Popular','人気順'],['alpha','알파벳순','A-Z','アルファベット順']];
+  const html = `<div class="view">
+    <div class="section-head" style="margin-bottom:var(--space-5)"><div><div class="section-title">${t('장르 탐색','Explore Genres','ジャンル探索')}</div><div class="section-subtitle">${t('16개 장르, 무한한 발견','16 genres, infinite discovery','16のジャンル、無限の発見')}</div></div></div>
+    <div class="filter-bar">${filters.map(([k,ko,en,ja])=>`<button class="btn-outlined ${genreSort===k?'active':''}" onclick="genreSort='${k}';renderGenres()">${t(ko,en,ja)}</button>`).join('')}</div>
+    <div class="grid-3">${list.map(genreGridCardHTML).join('')}</div>
+  </div>`;
+  document.getElementById('view-root').innerHTML = html;
+  applyLang();
+}
+function genreGridCardHTML(g){
+  const maxL = 2800000000;
+  const pct = Math.round(g.listeners/maxL*100);
+  return `<a class="genre-card" href="#genre/${g.id}" style="background:linear-gradient(150deg,${g.color},${g.colorSecondary})">
+    <div>
+      <div class="gc-emoji">${g.emoji}</div>
+      <div class="gc-name" style="margin-top:8px">${t(g.nameKo,g.name,g.nameJa)}<small>${g.id==='rnb'?'R&B / Soul':esc(g.name)}</small></div>
+    </div>
+    <div class="gc-sub">${g.subGenres.slice(0,4).map(s=>s.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())).join(' · ')}</div>
+    <div class="gc-foot">
+      <div class="listeners-bar">
+        <div class="lb-track"><div class="lb-fill" style="width:${pct}%"></div></div>
+        <div class="lb-label">${fmtListeners(g.listeners)} ${t('청취자','listeners','リスナー')}</div>
+      </div>
+      <span class="gc-go">${t('탐색하기','Explore','探索する')} →</span>
+    </div>
+  </a>`;
+}
+
+/* ===================== RENDER: GENRE DETAIL ===================== */
+function renderGenreDetail(id){
+  const g = genreById(id);
+  if(!g){ renderGenres(); return; }
+  const songs = SONGS.filter(s=>s.genre===id).sort((a,b)=>b.popularity-a.popularity).slice(0,10);
+  const related = (g.alsoListenTo||g.relatedGenres).map(genreById).filter(Boolean);
+  const eraHistory = ERAS.filter(e=>e.dominantGenres.includes(id));
+  const songRows = songs.length ? songs.map((s,i)=>`
+    <div class="chart-row gd" onclick="playSong(${s.id})">
+      <div class="cr-rankcell"><span class="cr-rank">${i+1}</span><button class="btn-play sm cr-playbtn" onclick="event.stopPropagation();playSong(${s.id})">${ICON.play}</button></div>
+      <div class="cr-song">${artHTML(s)}<div style="min-width:0"><div class="cr-title">${esc(s.title)}</div><div class="cr-artist"><a href="#artist/${encodeURIComponent(s.artist)}" onclick="event.stopPropagation()" style="color:inherit; text-decoration:none; cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc(s.artist)}</a></div></div></div>
+      <div class="cr-num cr-year">${s.year}</div>
+      <div class="cr-num">${fmtListeners(s.streamCount)}</div>
+      <div class="cr-num">${s.duration}</div>
+    </div>`).join('')
+    : `<div class="empty-state"><div class="es-emoji">■</div>${t('이 장르의 차트 곡은 준비 중이에요','Chart tracks for this genre are coming soon','このジャンルのチャート曲は準備中です')}</div>`;
+
+  const html = `<div class="view">
+    <section class="genre-hero" style="background:linear-gradient(160deg,${g.color},${g.colorSecondary} 45%,#07050f)">
+      <div class="gh-emoji">${g.emoji}</div>
+      <div class="era-badge" style="width:fit-content;margin-bottom:12px;background:rgba(0,0,0,.3)">${t('탄생','Origin','誕生')}: ${g.eraOrigin}</div>
+      <h1>${t(g.nameKo,g.name,g.nameJa)}</h1>
+      <div class="gh-desc">${t(g.descriptionKo,g.description,g.descriptionJa)}</div>
+      <div class="char-pills">${g.characteristics.map(c=>`<span class="genre-tag" style="background:rgba(0,0,0,.28)">${esc(c)}</span>`).join('')}</div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div class="section-title">${t('인기 곡','Top Songs','人気曲')}</div></div>
+      <div class="chart-head gd"><div style="text-align:center">#</div><div>${t('곡','Song','曲')}</div><div class="cr-year" style="text-align:right">${t('연도','Year','年')}</div><div style="text-align:right">${t('스트림','Streams','再生回数')}</div><div style="text-align:right">${t('길이','Length','時間')}</div></div>
+      <div style="margin-top:8px">${songRows}</div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div class="section-title">${t('서브장르','Sub-Genres','サブジャンル')}</div></div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">${g.subGenres.map(s=>`<span class="pill-tag">${s.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</span>`).join('')}</div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><div class="section-title">${t('이 장르를 듣는 사람은 이것도 들어요','Also listen to','このジャンルを聴く人はこちらも聴いています')}</div><div class="section-subtitle">${t('연결된 사운드 탐험','Explore connected sounds','関連するサウンドの探索')}</div></div></div>
+      <div class="grid-3">${related.map(r=>`
+        <a class="related-card" href="#genre/${r.id}">
+          <div class="rc-art" style="background:${artGradient(r.id)};display:grid;place-items:center;font-size:24px">${r.emoji}</div>
+          <div><div class="rc-name">${t(r.nameKo,r.name,r.nameJa)}<small>${fmtListeners(r.listeners)} ${t('청취자','listeners','リスナー')}</small></div></div>
+        </a>`).join('')}</div>
+    </section>
+
+    <section class="section">
+      <div class="artist-grid">${g.topArtists.map(a=>`
+        <a class="artist-cell" href="#artist/${encodeURIComponent(a)}" style="text-decoration:none; color:inherit;" onclick="event.stopPropagation()">
+          <div class="artist-avatar" style="background:${avatarColor(a)}">${initials(a)}</div>
+          <div class="an">${esc(a)}</div>
+        </a>`).join('')}</div>
+    </section>
+
+    ${eraHistory.length?`<section class="section">
+      <div class="section-head"><div><div class="section-title">${t('시대별 역사','In History','歴史の中での記述')}</div><div class="section-subtitle">${t('이 장르가 빛난 시대','Eras where this genre shaped music','このジャンルが音楽を形作った時代')}</div></div></div>
+      <div class="horizontal-scroll">${eraHistory.map(e=>`
+        <a href="#timeline" class="song-card" style="width:220px;background:${e.gradient};text-decoration:none">
+          <div style="font-size:30px;font-weight:700">${e.decade}</div>
+          <div style="font-size:13px;font-weight:600;margin-top:6px;text-shadow:0 1px 4px rgba(0,0,0,.4)">${t(e.title,e.titleEn,e.titleJa)}</div>
+        </a>`).join('')}</div>
+    </section>`:''}
+  </div>`;
+  document.getElementById('view-root').innerHTML = html;
+  applyLang();
+}
+
+/* ===================== RENDER: TIMELINE ===================== */
+function homeEraCardHTML(e){
+  return `<a class="era-card" href="#timeline" style="text-decoration:none; display:block;">
+    <div class="ec-top" style="background:${e.gradient}; min-height:150px;">
+      <div class="ec-decade">${e.decade}</div>
+      <div class="ec-title">${t(e.title,e.titleEn,e.titleJa)}</div>
+    </div>
+  </a>`;
+}
+
+function eraCardHTML(e){
+  return `<div class="era-card" onclick="this.classList.toggle('open')">
+    <div class="ec-top" style="background:${e.gradient}">
+      <div class="ec-decade">${e.decade}</div>
+      <div class="ec-title">${t(e.title,e.titleEn,e.titleJa)}</div>
+    </div>
+    <div class="ec-body">
+      <p>${t(e.description,e.descriptionEn,e.descriptionJa)}</p>
+      <div class="ec-label">${t('지배 장르','Dominant genres','主要ジャンル')}</div>
+      <div class="ec-genres">${e.dominantGenres.map(id=>{const g=genreById(id);return g?`<a class="genre-tag" href="#genre/${g.id}" onclick="event.stopPropagation()" style="background:${g.color}22;color:${g.color}"><span class="gt-dot" style="background:${g.color}"></span>${t(g.nameKo,g.name,g.nameJa)}</a>`:''}).filter(Boolean).join('')}</div>
+      <div class="ec-label">${t('주요 아티스트','Key artists','主なアーティスト')}</div>
+      <div class="ec-genres">${e.keyArtists.map(a=>`<a class="pill-tag" href="#artist/${encodeURIComponent(a)}" style="font-size:11px;padding:6px 12px;text-decoration:none;" onclick="event.stopPropagation()">${esc(a)}</a>`).join('')}</div>
+      <div class="ec-context">${esc(e.culturalContext)}</div>
+    </div>
+  </div>`;
+}
+const BIRTH_TRANS = {
+  "로큰롤 탄생 ▲": { ko: "로큰롤 탄생 ▲", en: "Birth of Rock & Roll ▲", ja: "ロックンロール誕生 ▲" },
+  "레게 태동 ≋": { ko: "레게 태동 ≋", en: "Emergence of Reggae ≋", ja: "レゲエの胎動 ≋" },
+  "힙합 탄생 ■": { ko: "힙합 탄생 ■", en: "Birth of Hip-Hop ■", ja: "ヒップホップ誕生 ■" },
+  "인디 등장 ⬚": { ko: "인디 등장 ⬚", en: "Emergence of Indie ⬚", ja: "インディー登場 ⬚" },
+  "K-Pop 태동 ○": { ko: "K-Pop 태동 ○", en: "Emergence of K-Pop ○", ja: "K-POPの胎動 ○" },
+  "디지털 스트리밍 ◆": { ko: "디지털 스트리밍 ◆", en: "Digital Streaming ◆", ja: "デジタルストリーミング ◆" },
+  "트랩 지배 ●": { ko: "트랩 지배 ●", en: "Trap Dominance ●", ja: "トラップの支配 ●" }
+};
+function renderTimeline(){
+  const html = `<div class="view">
+    <div class="section-head" style="margin-bottom:var(--space-5)"><div><div class="section-title">${t('시대별 역사','Timeline','年代別の歴史')}</div><div class="section-subtitle">${t('카드를 눌러 시대를 펼쳐보세요 · 1950s → 2020s','Tap a card to expand · 1950s → 2020s','カードをタップして年代を展開 · 1950s → 2020s')}</div></div></div>
+    <div class="timeline">${ERAS.map((e,i)=>`
+      ${eraCardHTML(e)}
+      ${i<ERAS.length-1 && ERAS[i].birth ? `<div style="align-self:center;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text-secondary);margin:12px 0">
+        <svg width="20" height="40" viewBox="0 0 20 40" fill="none"><path d="M10 2v32m0 0l-5-6m5 6l5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span style="font-family:var(--font-mono);font-size:10px;font-weight:800;white-space:nowrap;letter-spacing:0.5px">${(BIRTH_TRANS[ERAS[i].birth] ? t(BIRTH_TRANS[ERAS[i].birth].ko, BIRTH_TRANS[ERAS[i].birth].en, BIRTH_TRANS[ERAS[i].birth].ja) : ERAS[i].birth)}</span>
+      </div>`:''}
+    `).join('')}</div>
+  </div>`;
+  document.getElementById('view-root').innerHTML = html;
+  applyLang();
+}
+
+/* ===================== RENDER: ARTIST DETAIL & DYNAMIC SONGS ===================== */
+function registerDynamicSong(iTunesSong) {
+  const existing = SONGS.find(s => 
+    s.title.toLowerCase() === iTunesSong.trackName.toLowerCase() && 
+    s.artist.toLowerCase() === iTunesSong.artistName.toLowerCase()
+  );
+  if (existing) return existing;
+  
+  const newId = SONGS.length > 0 ? Math.max(...SONGS.map(s => s.id)) + 1 : 1;
+  const newSong = {
+    id: newId,
+    rank: SONGS.length + 1,
+    title: iTunesSong.trackName,
+    artist: iTunesSong.artistName,
+    genre: (iTunesSong.primaryGenreName || 'Pop').toLowerCase().replace(/[^a-z]/g, ''),
+    year: iTunesSong.releaseDate ? new Date(iTunesSong.releaseDate).getFullYear() : 2020,
+    popularity: 85,
+    duration: secToDur(iTunesSong.trackTimeMillis / 1000),
+    streamCount: 50000000 + (iTunesSong.trackId % 200000000),
+    rankChange: 0,
+    isDynamic: true,
+    previewUrl: iTunesSong.previewUrl
+  };
+  
+  albumArtCache[newSong.id] = iTunesSong.artworkUrl100.replace('100x100bb.jpg', '500x500bb.jpg');
+  saveAlbumArtCache();
+  
+  SONGS.push(newSong);
+  return newSong;
+}
+
+function fetchArtistSongsFromITunes(artistName) {
+  const query = encodeURIComponent(artistName);
+  fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=10`)
+    .then(res => res.json())
+    .then(data => {
+      const listDiv = document.getElementById('artist-songs-list');
+      if (!listDiv) return;
+      
+      if (data.results && data.results.length > 0) {
+        const registeredSongs = data.results.map(registerDynamicSong);
+        const songRowsHTML = registeredSongs.map((s, i) => `
+          <div class="chart-row gd" onclick="playSong(${s.id})">
+            <div class="cr-rankcell"><span class="cr-rank">${i+1}</span><button class="btn-play sm cr-playbtn" onclick="event.stopPropagation();playSong(${s.id})">${ICON.play}</button></div>
+            <div class="cr-song">${artHTML(s)}<div style="min-width:0"><div class="cr-title">${esc(s.title)}</div><div class="cr-artist">${esc(s.artist)}</div></div></div>
+            <div class="cr-num cr-year">${s.year}</div>
+            <div class="cr-num">${fmtListeners(s.streamCount)}</div>
+            <div class="cr-num">${s.duration}</div>
+          </div>
+        `).join('');
+        
+        listDiv.innerHTML = songRowsHTML;
+      } else {
+        listDiv.innerHTML = `<div class="empty-state"><div class="es-emoji">●</div>${t('곡을 찾지 못했습니다.','No tracks found.','曲が見つかりませんでした。')}</div>`;
+      }
+      applyLang();
+    })
+    .catch(err => {
+      console.error("iTunes artist search failed:", err);
+      const listDiv = document.getElementById('artist-songs-list');
+      if (listDiv) {
+        listDiv.innerHTML = `<div class="empty-state"><div class="es-emoji">✖</div>${t('곡 정보를 불러오는 데 실패했습니다.','Failed to load songs.','曲情報の読み込みに失敗しました。')}</div>`;
+      }
+      applyLang();
+    });
+}
+
+function renderArtistDetail(artistName) {
+  const root = document.getElementById('view-root');
+  const localSongs = SONGS.filter(s => 
+    s.artist.toLowerCase() === artistName.toLowerCase() || 
+    s.artist.toLowerCase().includes(artistName.toLowerCase())
+  );
+  
+  const avatarBg = avatarColor(artistName);
+  const initialsText = initials(artistName);
+  
+  let songRowsHTML = '';
+  if (localSongs.length > 0) {
+    songRowsHTML = localSongs.map((s, i) => `
+      <div class="chart-row gd" onclick="playSong(${s.id})">
+        <div class="cr-rankcell"><span class="cr-rank">${i+1}</span><button class="btn-play sm cr-playbtn" onclick="event.stopPropagation();playSong(${s.id})">${ICON.play}</button></div>
+        <div class="cr-song">${artHTML(s)}<div style="min-width:0"><div class="cr-title">${esc(s.title)}</div><div class="cr-artist">${esc(s.artist)}</div></div></div>
+        <div class="cr-num cr-year">${s.year}</div>
+        <div class="cr-num">${fmtListeners(s.streamCount)}</div>
+        <div class="cr-num">${s.duration}</div>
+      </div>
+    `).join('');
+  }
+  
+  const backBtnHTML = `<a class="btn-outlined" href="#timeline" style="width:fit-content; margin-bottom:var(--space-4); text-decoration:none; display:inline-flex; align-items:center; gap:8px;">← ${t('타임라인','Timeline','タイムライン')}</a>`;
+  
+  root.innerHTML = `
+    <div class="view">
+      ${backBtnHTML}
+      <section class="genre-hero" style="background:linear-gradient(160deg,#222,#111 65%,#07050f)">
+        <div class="artist-avatar" style="width:100px; height:100px; font-size:30px; border-radius:50%; background:${avatarBg}; margin-bottom:var(--space-3); border:1px solid var(--border-subtle); display:grid; place-items:center; font-weight:bold; color:#fff;">
+          ${initialsText}
+        </div>
+        <h1>${esc(artistName)}</h1>
+        <div class="gh-desc" style="opacity:0.7">${t('시대별 역사에 등록된 주요 아티스트','Key artist featured in the timeline','年代記タイムラインに掲載された主要アーティスト')}</div>
+      </section>
+      
+      <section class="section" id="artist-songs-section">
+        <div class="section-head"><div class="section-title">${t('주요 곡','Top Songs','主な楽曲')}</div></div>
+        <div class="chart-head gd"><div style="text-align:center">#</div><div>${t('곡','Song','曲')}</div><div class="cr-year" style="text-align:right">${t('연도','Year','年')}</div><div style="text-align:right">${t('스트림','Streams','再生回수')}</div><div style="text-align:right">${t('길이','Length','時間')}</div></div>
+        <div style="margin-top:8px" id="artist-songs-list">
+          ${songRowsHTML ? songRowsHTML : `<div class="empty-state" id="artist-loading-state" style="opacity:0.8;">${t('아티스트의 주요 곡들을 가져오는 중...','Fetching artist tracks from iTunes...','アーティストの主要曲を読み込み中...')}</div>`}
+        </div>
+      </section>
+    </div>
+  `;
+  
+  applyLang();
+  
+  if (localSongs.length === 0) {
+    fetchArtistSongsFromITunes(artistName);
+  }
+}
+
+/* ===================== RENDER: SEARCH ===================== */
+let searchQuery = '';
+const AI_RULES = [
+  {keys:['빠르','시끄','기타','fast','loud','guitar','速','激','うるさ','ギター'],genres:['rock','metal','punk'],ko:'빠르고 강렬한 기타 사운드네요',en:'Sounds like fast, intense guitar music',ja:'速くて強烈なギターサウンドですね'},
+  {keys:['느리','감성','슬프','slow','emotional','sad','mellow','遅','感性','悲し','メロウ','エ모'],genres:['indie','jazz','rnb'],ko:'느리고 감성적인 분위기예요',en:'A slow, emotional mood',ja:'静かでエモーショナルな雰囲気です'},
+  {keys:['반복','비트','전자','신스','repetitive','beat','electronic','synth','反復','ビート','電子','シンセ'],genres:['electronic','hiphop'],ko:'반복적인 비트 기반 사운드네요',en:'Repetitive, beat-driven sound',ja:'反復的なビートベースのサウンドですね'},
+  {keys:['퍼포먼스','군무','아이돌','choreo','performance','idol','パフォーマンス','アイドル','ダンス'],genres:['kpop'],ko:'완벽한 퍼포먼스의 음악이네요',en:'Music built around perfect performance',ja:'完璧なパフォーマンスの音楽ですね'},
+];
+function runAISuggest(q){
+  const lower = q.toLowerCase();
+  for(const r of AI_RULES){ if(r.keys.some(k=>lower.includes(k))) return r; }
+  return null;
+}
+function renderSearch(){
+  const q = searchQuery.trim();
+  let results = [], ai = null;
+  if(q){
+    const lower = q.toLowerCase();
+    results = SONGS.filter(s=>s.title.toLowerCase().includes(lower)||s.artist.toLowerCase().includes(lower));
+    ai = runAISuggest(q);
+  }
+  const examples = t(
+    ['빠르고 시끄러운 기타','느리고 감성적인','반복적인 비트','완벽한 퍼포먼스'],
+    ['fast loud guitar','slow emotional','repetitive beat','perfect performance'],
+    ['速くて激しいギター','静かでエモーショナル','反復的なビート','完璧なパフォーマンス']
+  );
+  let body;
+  if(!q){
+    const suggestedVibes = t(
+      ['드라이브할 때', '비 오는 날 카페', '공부할 때 집중', '빠르고 시끄러운 기타', '몽환적인 새벽 감성', '힙한 리듬 비트'],
+      ['Driving Vibe', 'Rainy Day Cafe', 'Deep Focus Study', 'Powerful Rock Guitars', 'Dreamy Midnight', 'Groovy Hip-Hop Beat'],
+      ['ドライブの時', '雨の日のカフェ', '勉強に集中', 'パワフルなロック', '幻想的な深夜の感性', 'ヒップなリズムビート']
+    );
+    // Pick 3 random songs from top 12 popular songs
+    const topPopular = [...SONGS].sort((a,b) => b.popularity - a.popularity).slice(0, 12);
+    const trendingList = [...topPopular].sort(() => 0.5 - Math.random()).slice(0, 3);
+    
+    body = `
+      <div style="margin-top:var(--space-6); animation: fadeIn 0.3s ease;">
+        <div class="ec-label">${t('인기 바이브 검색어','Suggested Vibes','人気のバイブキーワード')}</div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; margin-bottom:var(--space-6)">
+          ${suggestedVibes.map(v => `<button class="pill-tag" onclick="quickSearch('${v}')">${v}</button>`).join('')}
+        </div>
+
+        <div class="ec-label">${t('현재 트렌딩 추천 곡','Trending Music Recommendations','現在トレンドのおすすめ曲')}</div>
+        <div class="grid-3" style="margin-top:8px">
+          ${trendingList.map(s => `
+            <div class="related-card" onclick="playSong(${s.id})">
+              <div class="rc-art" style="background:${artGradient(s.genre)};display:grid;place-items:center;font-size:18px">${genreById(s.genre).emoji}</div>
+              <div style="min-width:0">
+                <div class="rc-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.title)}
+                  <small style="display:block; margin-top:2px; font-size:10px; color:var(--text-secondary)">${esc(s.artist)}</small>
+                </div>
+                <div style="margin-top:6px">${genreTagHTML(s.genre)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    const aiHTML = ai ? `<div class="ai-result">
+      <div class="ai-q">[SYSTEM] ${t('AI 장르 식별','AI genre detection','AIジャンル識別')}: "${esc(q)}"</div>
+      <div class="ai-a">${t(ai.ko,ai.en,ai.ja)} → ${ai.genres.map(id=>{const g=genreById(id);return `<a href="#genre/${g.id}" style="color:${g.color};font-weight:700">${t(g.nameKo,g.name,g.nameJa)}</a>`}).join(', ')}</div>
+    </div>` : '';
+    const resHTML = results.length ? `<div class="section-head"><div class="section-title">${t('검색 결과','Results','検索結果')} (${results.length})</div></div>
+      <div class="grid-3">${results.map(s=>`
+        <div class="related-card" onclick="playSong(${s.id})">
+          <div class="rc-art" style="background:${artGradient(s.genre)};display:grid;place-items:center;font-size:18px">${genreById(s.genre).emoji}</div>
+          <div style="min-width:0"><div class="rc-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.title)}<small><a href="#artist/${encodeURIComponent(s.artist)}" onclick="event.stopPropagation()" style="color:inherit; text-decoration:none; cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc(s.artist)}</a> · ${s.year}</small></div><div style="margin-top:6px">${genreTagHTML(s.genre)}</div></div>
+        </div>`).join('')}</div>`
+      : (ai ? '' : `<div class="empty-state"><div class="es-emoji">◆</div>${t('일치하는 곡이 없어요. 느낌을 설명해볼까요?','No matching songs. Try describing a vibe instead.','一致する曲がありません。雰囲気を説明してみますか？')}</div>`);
+    body = aiHTML + resHTML;
+  }
+  const html = `<div class="view">
+    <div class="section-head" style="margin-bottom:var(--space-5)"><div><div class="section-title">${t('장르 검색','Search','ジャンル検索')}</div><div class="section-subtitle">${t('곡·아티스트 검색 또는 느낌으로 장르 찾기','Find by track, artist, or vibe','曲・アーティストの検索、または雰囲気からジャンルを探す')}</div></div></div>
+    <div class="search-box">
+      ${ICON.search}
+      <input class="search-input" id="search-input" value="${esc(searchQuery)}" placeholder="${t('곡명, 아티스트, 또는 느낌…','Song, artist, or a vibe…','曲名、アーティスト、または雰囲気…')}" oninput="onSearchInput(this.value)" autocomplete="off">
+    </div>
+    <div class="ai-suggest">${examples.map(e=>`<button class="pill-tag" onclick="quickSearch('${e}')">${e}</button>`).join('')}</div>
+    ${body}
+  </div>`;
+  document.getElementById('view-root').innerHTML = html;
+  applyLang();
+  const inp = document.getElementById('search-input');
+  if(inp && q){ inp.focus(); inp.setSelectionRange(inp.value.length,inp.value.length); }
+}
+let searchTimer;
+function onSearchInput(v){
+  searchQuery = v;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(renderSearch, 220);
+}
+function quickSearch(v){ searchQuery = v; renderSearch(); }
+
+/* ===================== RENDER: TASTE DNA ===================== */
+let tasteState = { step: 1, genres: [], vibe: '', era: '', soundFocus: '', habitat: '' };
+
+function renderTaste(){
+  const root = document.getElementById('view-root');
+  if (tasteState.step === 'result') {
+    renderTasteResult(root);
+    return;
+  }
+  
+  let content = '';
+  if (tasteState.step === 1) {
+    const genreButtons = GENRES.map(g => {
+      const isSelected = tasteState.genres.includes(g.id);
+      // Use subtle colored dots or symbols. Muted gray for monochrome, gold for afrobeats
+      const symbolColor = isSelected ? '#000000' : (g.id === 'afrobeats' ? '#cca625' : '#8a8a8a');
+      return `<button class="taste-option-btn ${isSelected?'selected':''}" onclick="toggleTasteGenre('${g.id}')">
+        <span style="color: ${symbolColor}; margin-right: 4px; font-weight: bold;">${g.emoji}</span>
+        <span>${t(g.nameKo, g.name, g.nameJa)}</span>
+      </button>`;
+    }).join('');
+    
+    content = `
+      <div class="taste-step">
+        <div class="taste-step-title">Step 1. ${t('최애 장르 선택 (최대 3개)','Select Favorite Genres (Max 3)','お気に入りジャンルの選択 (最大3つ)')}</div>
+        <div class="taste-step-desc">${t('당신의 가슴을 뛰게 만드는 장르들을 골라보세요.','Choose the genres that make your heart beat.','あなたの心を躍らせるジャンルを選んでください。')}</div>
+        <div class="taste-grid-toggle">${genreButtons}</div>
+      </div>
+    `;
+  } else if (tasteState.step === 2) {
+    const vibes = [
+      {id: 'hype', ko: '신나고 파워풀한 비트', en: 'Hype & Powerful Beats', ja: 'エキサイティングでパワフルな비트', emoji: '◈', color: '#cca625'},
+      {id: 'chill', ko: '차분하고 몽환적인 감성', en: 'Calm & Dreamy Vibes', ja: '穏やかで幻想的な感性', emoji: '◇', color: '#5a97a8'},
+      {id: 'emotional', ko: '서정적이고 아련한 멜로디', en: 'Melodic & Emotional', ja: '叙情的で切ないメロディー', emoji: '♥', color: '#be5a74'},
+      {id: 'intense', ko: '어둡고 묵직한 날것의 에너지', en: 'Dark & Intense Raw Energy', ja: 'ダークで重々しい生のエネルギー', emoji: '✦', color: '#825abf'}
+    ];
+    
+    const vibeButtons = vibes.map(v => {
+      const isSelected = tasteState.vibe === v.id;
+      return `<button class="taste-option-btn ${isSelected?'selected':''}" onclick="selectTasteVibe('${v.id}')">
+        <span style="color: ${isSelected ? '#000000' : v.color}; margin-right: 4px; font-weight: bold;">${v.emoji}</span>
+        <span>${t(v.ko, v.en, v.ja)}</span>
+      </button>`;
+    }).join('');
+ 
+    content = `
+      <div class="taste-step">
+        <div class="taste-step-title">Step 2. ${t('선호하는 음악 분위기','Preferred Music Vibe','好みの音楽の雰囲気')}</div>
+        <div class="taste-step-desc">${t('지금 끌리는 음악적 색깔은 무엇인가요?','What musical colors are you drawn to right now?','今惹かれている音楽の色は何ですか？')}</div>
+        <div class="taste-grid-toggle" style="grid-template-columns: 1fr;">${vibeButtons}</div>
+      </div>
+    `;
+  } else if (tasteState.step === 3) {
+    const eras = [
+      {id: 'retro', ko: '클래식 레트로 (1950s - 1970s)', en: 'Classic Retro (1950s - 1970s)', ja: 'クラシックレトロ (1950s - 1970s)', emoji: '◀', color: '#a8815a'},
+      {id: 'millennium', ko: '골든 밀레니엄 (1980s - 2000s)', en: 'Golden Millennium (1980s - 2000s)', ja: 'ゴールデンミレニアム (1980s - 2000s)', emoji: '〓', color: '#5aa88c'},
+      {id: 'modern', ko: '트렌디 디지털 (2010s - 2020s)', en: 'Trendy Digital (2010s - 2020s)', ja: 'トレンディデジタル (2010s - 2020s)', emoji: '▶', color: '#5a82a8'}
+    ];
+    
+    const eraButtons = eras.map(e => {
+      const isSelected = tasteState.era === e.id;
+      return `<button class="taste-option-btn ${isSelected?'selected':''}" onclick="selectTasteEra('${e.id}')">
+        <span style="color: ${isSelected ? '#000000' : e.color}; margin-right: 4px; font-weight: bold;">${e.emoji}</span>
+        <span>${t(e.ko, e.en, e.ja)}</span>
+      </button>`;
+    }).join('');
+ 
+    content = `
+      <div class="taste-step">
+        <div class="taste-step-title">Step 3. ${t('선호하는 시대 감성','Preferred Music Era','好みの年代の感성')}</div>
+        <div class="taste-step-desc">${t('당신의 감성이 머무는 시간대를 선택해 주세요.','Select the era where your sentiment belongs.','あなたの感性が惹かれる年代を選択してください。')}</div>
+        <div class="taste-grid-toggle" style="grid-template-columns: 1fr;">${eraButtons}</div>
+      </div>
+    `;
+  } else if (tasteState.step === 4) {
+    const soundFocuses = [
+      {id: 'vocal', ko: '보컬 & 가사 (멜로디와 이야기)', en: 'Vocals & Lyrics (Deep Story)', ja: 'ボーカル＆歌詞 (深いストーリー)', emoji: '♬', color: '#a55abf'},
+      {id: 'beat', ko: '드럼 & 베이스 (비트와 리듬감)', en: 'Heavy Drums & Bass (Beat Focus)', ja: '胸を打つドラム＆ベース (ビートフォーカス)', emoji: '♩', color: '#bf5a5a'},
+      {id: 'synth', ko: '신디사이저 & 키보드 (미래적이고 화려한 사운드)', en: 'Sparkling Synths & Keyboards', ja: '華やかで未来的なシンセサイザー', emoji: '♪', color: '#5a6ebf'},
+      {id: 'acoustic', ko: '기타 & 피아노 (어쿠스틱 현악 및 타건)', en: 'Acoustic Strings & Piano', ja: '温かみのあるアコースティックギター＆ピアノ', emoji: '♫', color: '#80bf5a'}
+    ];
+    
+    const soundFocusButtons = soundFocuses.map(s => {
+      const isSelected = tasteState.soundFocus === s.id;
+      return `<button class="taste-option-btn ${isSelected?'selected':''}" onclick="selectTasteSoundFocus('${s.id}')">
+        <span style="color: ${isSelected ? '#000000' : s.color}; margin-right: 4px; font-weight: bold;">${s.emoji}</span>
+        <span>${t(s.ko, s.en, s.ja)}</span>
+      </button>`;
+    }).join('');
+ 
+    content = `
+      <div class="taste-step">
+        <div class="taste-step-title">Step 4. ${t('선호하는 사운드 포커스','Preferred Sound Focus','好みのサウンドフォーカス')}</div>
+        <div class="taste-step-desc">${t('귀에 가장 먼저 꽂히는 음악적 핵심 요소는 무엇인가요?','Which core musical element catches your ears first?','耳に真っ先に飛び込んでくる音楽の核心要素は何ですか？')}</div>
+        <div class="taste-grid-toggle" style="grid-template-columns: 1fr;">${soundFocusButtons}</div>
+      </div>
+    `;
+  } else if (tasteState.step === 5) {
+    const habitats = [
+      {id: 'night', ko: '어두운 밤, 나만의 조용한 방 안에서', en: 'Late Night in My Room', ja: '静かな夜、自分だけの部屋で', emoji: '☽', color: '#bfa85a'},
+      {id: 'street', ko: '헤드폰을 쓰고 도시나 공원을 걸을 때', en: 'Walking Outside with Headphones', ja: 'ヘッドホンをつけて街を散歩しながら', emoji: '⧟', color: '#7a8c9e'},
+      {id: 'study', ko: '독서나 업무, 공부 등 고도의 몰입이 필요할 때', en: 'Deep Concentration (Work & Study)', ja: '勉強や作業に深く集中しているとき', emoji: '✎', color: '#7ebf7a'},
+      {id: 'energy', ko: '기분 전환, 활기찬 파티나 신나는 드라이브 중에', en: 'Vibe Boost, Driving or Party', ja: '気分転換、ドライブ、またはパーティーのとき', emoji: '☼', color: '#bf805a'}
+    ];
+    
+    const habitatButtons = habitats.map(h => {
+      const isSelected = tasteState.habitat === h.id;
+      return `<button class="taste-option-btn ${isSelected?'selected':''}" onclick="selectTasteHabitat('${h.id}')">
+        <span style="color: ${isSelected ? '#000000' : h.color}; margin-right: 4px; font-weight: bold;">${h.emoji}</span>
+        <span>${t(h.ko, h.en, h.ja)}</span>
+      </button>`;
+    }).join('');
+ 
+    content = `
+      <div class="taste-step">
+        <div class="taste-step-title">Step 5. ${t('가장 자주 음악을 듣는 공간','Primary Listening Habitat','最も頻繁に音楽を聴く空間')}</div>
+        <div class="taste-step-desc">${t('어떤 순간에 당신의 일상에 음악이 가장 필요해지나요?','In which moments does your life need music the most?','どのような瞬間に、あなたの日常に最も音楽が必要になりますか？')}</div>
+        <div class="taste-grid-toggle" style="grid-template-columns: 1fr;">${habitatButtons}</div>
+      </div>
+    `;
+  }
+  
+  const stepDots = [1, 2, 3, 4, 5].map(s => 
+    `<div class="tpd-dot ${tasteState.step===s?'active':''}"></div>`
+  ).join('');
+ 
+  const nextBtn = tasteState.step === 5 
+    ? `<button class="btn-primary" onclick="calculateTasteDNA()">${t('DNA 분석하기','Analyze DNA','DNA分析する')}</button>`
+    : `<button class="btn-secondary" onclick="nextTasteStep()">${t('다음 단계','Next','次のステップ')} →</button>`;
+    
+  const prevBtn = tasteState.step > 1 
+    ? `<button class="btn-outlined" onclick="prevTasteStep()">← ${t('이전','Prev','戻る')}</button>`
+    : `<div></div>`;
+ 
+  const html = `
+    <div class="view">
+      <div class="section-head" style="margin-bottom:var(--space-6)">
+        <div>
+          <div class="section-title">${t('취향 DNA 분석기','Taste DNA Profiler','好みDNAプロファイラー')}</div>
+          <div class="section-subtitle">${t('선택을 통해 나만의 음악적 자아를 발견해 보세요','Discover your musical ego through steps','選択を通じて自分だけの音楽的アイデンティティを発見しましょう')}</div>
+        </div>
+      </div>
+      
+      <div class="taste-container">
+        ${content}
+        
+        <div class="taste-progress">
+          ${prevBtn}
+          <div class="taste-progress-dots">${stepDots}</div>
+          ${nextBtn}
+        </div>
+      </div>
+    </div>
+  `;
+  root.innerHTML = html;
+  applyLang();
+}
+
+function toggleTasteGenre(id){
+  const idx = tasteState.genres.indexOf(id);
+  if (idx > -1) {
+    tasteState.genres.splice(idx, 1);
+  } else {
+    if (tasteState.genres.length < 3) {
+      tasteState.genres.push(id);
+    }
+  }
+  renderTaste();
+}
+
+function selectTasteVibe(id){
+  tasteState.vibe = id;
+  renderTaste();
+}
+
+function selectTasteEra(id){
+  tasteState.era = id;
+  renderTaste();
+}
+
+function selectTasteSoundFocus(id){
+  tasteState.soundFocus = id;
+  renderTaste();
+}
+
+function selectTasteHabitat(id){
+  tasteState.habitat = id;
+  renderTaste();
+}
+
+function nextTasteStep(){
+  if (tasteState.step === 1 && tasteState.genres.length === 0) {
+    alert(t('최소 1개의 장르를 선택해 주세요!','Please select at least 1 genre!','最低1つのジャンルを選択してください！'));
+    return;
+  }
+  if (tasteState.step === 2 && !tasteState.vibe) {
+    alert(t('음악 분위기를 선택해 주세요!','Please select a music vibe!','音楽の雰囲気を選択してください！'));
+    return;
+  }
+  if (tasteState.step === 3 && !tasteState.era) {
+    alert(t('선호하는 시대를 선택해 주세요!','Please select a preferred era!','好みの年代を選択してください！'));
+    return;
+  }
+  if (tasteState.step === 4 && !tasteState.soundFocus) {
+    alert(t('사운드 포커스를 선택해 주세요!','Please select a sound focus!','サウンドフォーカスを選択してください！'));
+    return;
+  }
+  tasteState.step++;
+  renderTaste();
+}
+
+function prevTasteStep(){
+  tasteState.step--;
+  renderTaste();
+}
+
+function calculateTasteDNA(){
+  if (tasteState.step === 5 && !tasteState.habitat) {
+    alert(t('음악을 듣는 공간을 선택해 주세요!','Please select a listening habitat!','음악을 듣는 공간을 선택해 주세요!'));
+    return;
+  }
+  tasteState.step = 'result';
+  renderTaste();
+}
+
+function resetTaste(){
+  tasteState = { step: 1, genres: [], vibe: '', era: '', soundFocus: '', habitat: '' };
+  renderTaste();
+}
+
+function renderTasteResult(root){
+  const gs = tasteState.genres;
+  const vb = tasteState.vibe;
+  const er = tasteState.era;
+  const sf = tasteState.soundFocus;
+  const hb = tasteState.habitat;
+  
+  // Determine Profile
+  let profileKo = '자유로운 사운드 탐험가';
+  let profileEn = 'Eclectic Sound Explorer';
+  let profileJa = '自由なサウンド探検家';
+  let descKo = '당신은 특정 장르나 스타일에 얽매이지 않고 소리의 다채로움을 즐기는 탐험가입니다. 다양한 음악적 스펙트럼과 하이브리드 감성을 지녔습니다.';
+  let descEn = 'You are an explorer who enjoys the colorful textures of sound, unbound by strict styles. You embrace a wide musical spectrum and hybrid sentiments.';
+  let descJa = 'あなたは特定のジャンルやスタイルにとらわれず、音の多彩さを楽しむ探検家です。幅広い音楽的スペックトルとハイブリッドな感性を持っています。';
+  let badge = 'EXPLORER';
+  
+  if ((gs.includes('rock') || gs.includes('metal') || gs.includes('punk')) && (vb === 'intense' || sf === 'acoustic')) {
+    profileKo = '강철 같은 에너지 리프 추적자';
+    profileEn = 'Heavy Metal Iron Riffer';
+    profileJa = '鋼鉄のエナジーリ프 추적자';
+    descKo = '거친 일렉 기타의 포효와 가슴을 때리는 비트에 본능적으로 끌리는군요. 파워풀하고 정제되지 않은 진정성을 소중히 여깁니다.';
+    descEn = 'You are drawn to raw electric guitars and thunderous beats. You value heavy energy and unpolished musical authenticity.';
+    descJa = '歪んだエレキギターの咆哮と、胸を打つビートに本能的に惹かれているようです。パワフルで加工されていない本物のエネルギーを大切にしています。';
+    badge = 'RAW POWER';
+  } else if ((gs.includes('jazz') || gs.includes('blues') || gs.includes('rnb')) && (vb === 'chill' || sf === 'beat')) {
+    profileKo = '미드나잇 소울 메이트';
+    profileEn = 'Midnight Soul Cruiser';
+    profileJa = 'ミッドナイト・ソウルメイト';
+    descKo = '차분하고 그루브한 베이스와 재즈틱한 화음 속에서 가장 편안함을 느낍니다. 낭만적이고 사색적인 밤에 어울리는 감성의 소유자입니다.';
+    descEn = 'You find peace in warm, groovy basslines and jazz chords. A true romantic who belongs in the quiet hours of a rainy evening.';
+    descJa = '穏やかでグルーヴィーなベースと、ジャジーなコード進行の中で最も安らぎを感じます。ロマンチックで思索的な夜にぴったりの感性の持ち主です。';
+    badge = 'GROOVE & SOUL';
+  } else if ((gs.includes('pop') || gs.includes('kpop') || gs.includes('electronic')) && (vb === 'hype' || sf === 'synth')) {
+    profileKo = '짜릿한 스파클링 리듬 체이서';
+    profileEn = 'Sparkling Rhythm Chaser';
+    profileJa = '刺激的なスパークリングリズムチェイサー';
+    descKo = '캐치한 훅 멜로디와 어깨를 들썩이게 만드는 화려한 일렉트로닉 비트에 열광합니다. 트렌디한 감각과 에너제틱한 삶의 태도를 가지고 있습니다.';
+    descEn = 'You thrive on catchy hooks and neon synth beats. You have a trendy ear and a dynamic, high-energy outlook on life.';
+    descJa = 'キャッチーなフックメロディーと、肩을 흔드는 화려한 일렉트로닉 비트에 열광합니다. 트렌디한 감각과 에너제틱한 삶의 태도를 가지고 있습니다.';
+    badge = 'SPARKLING HYPE';
+  } else if ((gs.includes('classical') || gs.includes('jazz')) && (hb === 'study' || hb === 'night')) {
+    profileKo = '도심 속 클래식 수집가';
+    profileEn = 'Urban Neo-Classicist';
+    profileJa = '都会のネオ・クラシック収集家';
+    descKo = '오케스트라의 풍부한 울림이나 재즈의 정교한 화성 등 클래식하고 변하지 않는 가치에 끌립니다. 고요한 시간 속에 깊숙이 몰입하는 사색가입니다.';
+    descEn = 'You appreciate timeless orchestral scales, grand piano strings, and complex jazz voicings. A deep thinker who enjoys acoustic focus.';
+    descJa = 'オーケストラの豊かな響きや、ジャズの精巧な和音など、クラシックで不変の価値に惹かれます。静寂の時間の中で深く没頭する思索家です。';
+    badge = 'NEO-CLASSICIST';
+  } else if (gs.includes('electronic') && er === 'modern' && sf === 'synth') {
+    profileKo = '네온 빛 노이즈 미래주의자';
+    profileEn = 'Neon Noise Futurist';
+    profileJa = 'ネオン光ノイズ未来主義者';
+    descKo = '전통적인 경계를 뛰어넘어 초현대적이고 실험적인 사운드를 모험합니다. 강한 신스 웨이브와 인공적인 질감의 하이테크 비트를 선호합니다.';
+    descEn = 'You push traditional boundaries to explore ultra-modern synthetic textures. You live for sparkling high-BPM synth drops and digital noise.';
+    descJa = '伝統的な境界を越え、超現代的で実験的なサウンドを冒険します。強力なシンセウェーブや人工的な質感のハイテクビートを好みます。';
+    badge = 'FUTURIST';
+  } else if ((gs.includes('hiphop') || gs.includes('rnb')) && sf === 'beat' && (hb === 'street' || hb === 'energy')) {
+    profileKo = '거리 위의 감성 비트 시인';
+    profileEn = 'Street Beat Poet';
+    profileJa = '街角のビート詩人';
+    descKo = '리드미컬한 비트와 랩, 그리고 깊은 서브 베이스의 타격감이 당신의 발걸음을 만듭니다. 도시의 일상과 현실적인 멜로디에 깊이 공감합니다.';
+    descEn = 'Your strides are driven by rhythmic drum flows, punchy verses, and heavy sub-bass lines. You vibe with urban realism and street poetry.';
+    descJa = 'リズムカルなビートとラップ、そして深いサブベースの打撃感があなたの足取りを作ります. 都市の日常と現実적인 멜로디에 깊이 공감합니다.';
+    badge = 'STREET POET';
+  } else if ((gs.includes('country') || gs.includes('indie') || gs.includes('folk')) && er === 'retro' && sf === 'acoustic') {
+    profileKo = '따뜻한 캠프파이어 방랑자';
+    profileEn = 'Campfire Wanderer';
+    profileJa = '暖かいたき火の放浪者';
+    descKo = '어쿠스틱 기타 한 대와 보컬 본연의 목소리, 소박한 자연의 울림 속에서 평온함을 찾습니다. 아날로그 악기의 따뜻한 울림을 지극히 사랑합니다.';
+    descEn = 'You find comfort in the simple resonance of acoustic guitars, raw vocal intimacy, and folk tales. You cherish the organic warmth of pure wooden sounds.';
+    descJa = 'アコースティックギター一本とボーカル本来の声、素朴な自然の響きの中で平穏を見出します。アナログ楽器の温かい響きをこよなく愛しています。';
+    badge = 'WANDERER';
+  } else if (gs.includes('indie') || vb === 'emotional') {
+    profileKo = '아날로그 다이어리 몽상가';
+    profileEn = 'Analog Diary Dreamer';
+    profileJa = 'アナログ日記の夢想家';
+    descKo = '세련됨보다는 가사 한 줄에 스며든 진정성 있는 멜로디에 감동받습니다. 몽환적이거나 아련한 어쿠스틱 사운드를 탐색하는 섬세한 취향을 지녔습니다.';
+    descEn = 'You prefer authentic lyricism and genuine emotions over commercial polish. You possess a delicate ear for dreamy, reflective sounds.';
+    descJa = '洗練された商業音楽よりも、歌詞の一行に染み込んだ真実味のあるメロディーに感動します。幻想的で哀愁漂うアコースティックサウンドを好む、繊細な感性を持っています。';
+    badge = 'MELODIC DREAM';
+  }
+  
+  // Calculate Scores
+  let melody = 30 + (vb === 'emotional' ? 30 : 0) + (sf === 'vocal' ? 25 : 0) + (gs.includes('pop') || gs.includes('rnb') ? 10 : 0) + (gs.includes('classical') ? 10 : 0);
+  let rhythm = 30 + (vb === 'hype' ? 30 : 0) + (sf === 'beat' ? 25 : 0) + (gs.includes('hiphop') || gs.includes('electronic') ? 10 : 0) + (gs.includes('latin') ? 10 : 0);
+  let acoustic = 30 + (er === 'retro' ? 25 : 0) + (sf === 'acoustic' ? 25 : 0) + (gs.includes('jazz') || gs.includes('classical') || gs.includes('country') ? 10 : 0) + (hb === 'night' ? 10 : 0);
+  let electronic = 20 + (er === 'modern' ? 20 : 0) + (sf === 'synth' ? 25 : 0) + (gs.includes('electronic') || gs.includes('metal') ? 20 : 0) + (hb === 'energy' ? 15 : 0);
+  let spaceDepth = 25 + (vb === 'chill' ? 25 : 0) + (hb === 'night' || hb === 'study' ? 20 : 0) + (gs.includes('indie') || gs.includes('classical') ? 15 : 0) + (sf === 'synth' ? 15 : 0);
+  
+  // Cap at 98%
+  melody = Math.min(98, melody);
+  rhythm = Math.min(98, rhythm);
+  acoustic = Math.min(98, acoustic);
+  electronic = Math.min(98, electronic);
+  spaceDepth = Math.min(98, spaceDepth);
+  
+  // Generate DNA Tags
+  const tags = [];
+  gs.forEach(g => {
+    const genreObj = genreById(g);
+    if(genreObj) tags.push(genreObj.name.replace(/\s+/g, ''));
+  });
+  
+  if (vb === 'hype') tags.push(t('하이텐션','HighEnergy','ハイテンション'));
+  else if (vb === 'chill') tags.push(t('칠링','ChilledOut','チリング'));
+  else if (vb === 'emotional') tags.push(t('감성충전','Emotional','エモーショナル'));
+  else if (vb === 'intense') tags.push(t('강렬함','RawEnergy','強烈'));
+  
+  if (er === 'retro') tags.push('RetroRetro');
+  else if (er === 'millennium') tags.push('Y2KMillennium');
+  else if (er === 'modern') tags.push('FutureDigital');
+  
+  if (sf === 'vocal') tags.push(t('보컬중심','VocalsFocus','ボーカル中心'));
+  else if (sf === 'beat') tags.push(t('리듬비트','RhythmBeat','リズム・ビート'));
+  else if (sf === 'synth') tags.push(t('신디사운드','SynthHeavy','シンセサウンド'));
+  else if (sf === 'acoustic') tags.push(t('어쿠스틱','AcousticVibe','アコースティック'));
+  
+  if (hb === 'night') tags.push(t('새벽감성','LateNightRoom','深夜の感性'));
+  else if (hb === 'street') tags.push(t('도심산책','StreetWalk','都会の散歩'));
+  else if (hb === 'study') tags.push(t('몰입','DeepFocus','集中モード'));
+  else if (hb === 'energy') tags.push(t('에너지부스트','VibeBoost','エナジーブースト'));
+
+  // Recommend songs based on DNA (randomized subset of matching tracks)
+  const matchingSongs = SONGS.filter(s => gs.includes(s.genre));
+  const shuffledMatching = [...matchingSongs].sort(() => 0.5 - Math.random());
+  const finalRecSongs = shuffledMatching.length ? shuffledMatching.slice(0, 3) : SONGS.slice(0, 3);
+  
+  // Recommend related genres (randomized subset of related genres)
+  const allRelatedGIds = gs.map(genreById).filter(Boolean).flatMap(g => g.relatedGenres).filter((v, i, self) => self.indexOf(v) === i && !gs.includes(v));
+  const shuffledRelatedGIds = [...allRelatedGIds].sort(() => 0.5 - Math.random());
+  const relatedG = shuffledRelatedGIds.slice(0, 3).map(genreById).filter(Boolean);
+  const finalRelatedG = relatedG.length ? relatedG : [genreById('indie'), genreById('rnb')];
+  
+  const html = `
+    <div class="view td-result">
+      <div class="section-head" style="margin-bottom:var(--space-5)">
+        <div>
+          <div class="section-title">${t('나의 음악 취향 DNA','My Music Taste DNA','私の音楽好みDNA')}</div>
+          <div class="section-subtitle">${t('당신의 음악적 자아가 지닌 특성을 분석한 결과입니다.','The analytical profile of your musical ego.','あなたの音楽的アイデンティティの特性を分析した結果です。')}</div>
+        </div>
+      </div>
+      
+      <div class="taste-container">
+        <span class="td-badge">${badge}</span>
+        <div class="td-dna-name">${t(profileKo, profileEn, profileJa)}</div>
+        <div class="td-dna-desc">${t(descKo, descEn, descJa)}</div>
+        
+        <div class="td-dna-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:var(--space-5)">
+          ${tags.map(tag => `<span style="font-family:var(--font-mono); font-size:11px; background:#111; color:var(--text-secondary); border:1px solid var(--border-subtle); padding:4px 8px;">#${tag}</span>`).join('')}
+        </div>
+        
+        <div class="td-visual-row">
+          <div class="td-chart">
+            <div class="ec-label">${t('음악적 5대 성향','Five Musical Core Values','音楽の5大コア特性')}</div>
+            <div class="td-chart-item">
+              <div class="td-chart-label"><span>${t('멜로디 감수성 (Melody Focus)','Melody Sensitivity','メロディー感受性')}</span><span>${melody}%</span></div>
+              <div class="td-chart-bar"><div class="td-chart-fill" style="width:${melody}%"></div></div>
+            </div>
+            <div class="td-chart-item">
+              <div class="td-chart-label"><span>${t('리듬 & 비트 타격감 (Rhythm & Beat)','Rhythm & Beat Impact','リズム＆ビート打撃感')}</span><span>${rhythm}%</span></div>
+              <div class="td-chart-bar"><div class="td-chart-fill" style="width:${rhythm}%"></div></div>
+            </div>
+            <div class="td-chart-item">
+              <div class="td-chart-label"><span>${t('아날로그 감성 온도 (Acoustic Warmth)','Acoustic Sentiment','アナログ感性温度')}</span><span>${acoustic}%</span></div>
+              <div class="td-chart-bar"><div class="td-chart-fill" style="width:${acoustic}%"></div></div>
+            </div>
+            <div class="td-chart-item">
+              <div class="td-chart-label"><span>${t('일렉트로닉 에너지 (Electronic Energy)','Electronic Energy','エレクトロニックエネルギー')}</span><span>${electronic}%</span></div>
+              <div class="td-chart-bar"><div class="td-chart-fill" style="width:${electronic}%"></div></div>
+            </div>
+            <div class="td-chart-item">
+              <div class="td-chart-label"><span>${t('공간감과 몰입도 (Ambient Space & Depth)','Ambient Space & Depth','空間感と没入度')}</span><span>${spaceDepth}%</span></div>
+              <div class="td-chart-bar"><div class="td-chart-fill" style="width:${spaceDepth}%"></div></div>
+            </div>
+          </div>
+          
+          <div style="display:flex; flex-direction:column; gap:var(--space-4)">
+            <div class="ec-label">${t('연결된 새로운 장르 추천','Connected Genres For You','あなたにおすすめの関連ジャンル')}</div>
+            <div style="display:flex; flex-direction:column; gap:8px">
+              ${finalRelatedG.map(g => `
+                <a class="related-card" href="#genre/${g.id}" style="padding:10px">
+                  <div class="rc-art" style="background:${artGradient(g.id)};width:36px;height:36px;display:grid;place-items:center;font-size:16px">${g.emoji}</div>
+                  <div><div class="rc-name" style="font-size:13px">${t(g.nameKo,g.name,g.nameJa)}</div></div>
+                </a>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+        
+        <div class="section" style="margin-bottom: var(--space-5);">
+          <div class="ec-label">${t('당신의 DNA에 매칭되는 숨겨진 명곡','Tracks Matching Your DNA','あなたのDNAにマッチする隠れた名曲')}</div>
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top:8px">
+            ${finalRecSongs.map(s => `
+              <div class="song-card" style="width:100%" onclick="playSong(${s.id})">
+                ${artHTML(s)}
+                <div class="sc-title" style="font-size:12px">${esc(s.title)}</div>
+                <div class="sc-artist" style="font-size:10px">${esc(s.artist)}</div>
+                <div class="sc-meta">${genreTagHTML(s.genre)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div style="display:flex; justify-content:flex-end; margin-top:var(--space-4)">
+          <button class="btn-outlined" onclick="resetTaste()">${t('다시 분석하기','Retake Test','もう一度分析する')}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  root.innerHTML = html;
+  applyLang();
+}/* ===================== NOW PLAYING / VIBE ANALYZER ===================== */
+let npState = { song:null, playing:false, elapsed:0, total:0, timer:null, volume:0.2 };
+
+function getVibeData(song) {
+  const hash = (song.id * 17) % 100;
+  let tempo = 120;
+  let energy = 70 + (hash % 25);
+  let mood = 50 + (hash % 41) - 20;
+  let organic = 15 + (hash % 70);
+  
+  if (song.genre === 'pop') {
+    tempo = 100 + (hash % 30);
+    organic = Math.max(10, organic - 20);
+  } else if (song.genre === 'hiphop') {
+    tempo = 80 + (hash % 20);
+    energy = Math.max(70, energy);
+    organic = Math.max(15, organic - 15);
+  } else if (song.genre === 'rock') {
+    tempo = 115 + (hash % 30);
+    energy = Math.max(75, energy);
+    organic = Math.max(30, organic + 10);
+  } else if (song.genre === 'metal') {
+    tempo = 135 + (hash % 40);
+    energy = Math.max(85, energy + 10);
+    organic = Math.min(25, organic / 2);
+  } else if (song.genre === 'electronic') {
+    tempo = 120 + (hash % 20);
+    organic = Math.min(20, organic / 3);
+  } else if (song.genre === 'rnb') {
+    tempo = 70 + (hash % 30);
+    organic = Math.max(40, organic + 15);
+    energy = Math.min(75, energy);
+  } else if (song.genre === 'jazz') {
+    tempo = 60 + (hash % 50);
+    organic = Math.max(70, organic + 30);
+    energy = Math.min(60, energy - 10);
+  } else if (song.genre === 'classical') {
+    tempo = 50 + (hash % 80);
+    organic = 95;
+    energy = Math.min(50, energy - 20);
+  } else if (song.genre === 'kpop') {
+    tempo = 110 + (hash % 30);
+    organic = Math.max(10, organic - 20);
+    energy = Math.max(80, energy);
+  } else if (song.genre === 'indie') {
+    tempo = 90 + (hash % 40);
+    organic = Math.max(45, organic + 15);
+  } else if (song.genre === 'jpop') {
+    tempo = 115 + (hash % 35);
+    organic = Math.max(25, organic + 5);
+    energy = Math.max(70, energy);
+  }
+  
+  tempo = Math.round(tempo);
+  energy = Math.min(100, Math.max(0, Math.round(energy)));
+  mood = Math.min(100, Math.max(0, Math.round(mood)));
+  organic = Math.min(100, Math.max(0, Math.round(organic)));
+
+  const g = genreById(song.genre);
+  const genreName = g ? t(g.nameKo, g.name, g.nameJa) : song.genre;
+  
+  let analysisKo = `이 곡은 ${song.year}년에 발표된 ${song.artist}의 작품으로, ${genreName} 장르 특유의 예술적 기법과 고유한 사운드가 돋보입니다. 템포는 ${tempo} BPM으로 안정적이면서도 리드미컬한 긴장감을 유지하며, ${energy}%의 높은 에너지 레벨을 바탕으로 곡의 테마를 힘 있게 전달합니다. 특히 전자 악기와 어쿠스틱 사운드의 비율이 적절히 조화를 이루어, 이 장르를 선호하는 이들의 취향에 아주 잘 부합하는 명곡입니다.`;
+  let analysisEn = `Released in ${song.year} by ${song.artist}, this track is a stellar representation of the ${song.genre.toUpperCase()} genre. Clocking in at ${tempo} BPM, it strikes an elegant balance between rhythm and emotional depth. With an energy rating of ${energy}%, it drives its musical theme forward with absolute confidence. The mix showcases a ${organic}% acoustic texture blended with genre-defining elements, offering a rich soundscape for curious ears.`;
+  let analysisJa = `この曲は${song.year}年にリリースされた${song.artist}の作品で、${genreName}ジャンル特有の芸術的な手法と独自のサウンドが際立っています。テンポは${tempo} BPMで、安定しながらもリズミカルな緊張感を維持し、${energy}%の高いエネルギーレベルをベースに曲의テーマを力強く表現しています。特に電子楽器とアコースティックサウンドのバランスが絶妙に調和しており、このジャンルを好むリスナーの感性に完璧にフィットする名曲です。`;
+
+  return { tempo, energy, mood, organic, analysisKo, analysisEn, analysisJa };
+}
+
+function closeVibeAnalyzer(){
+  document.getElementById('vibe-analyzer').classList.remove('open');
+  const appContainer = document.querySelector('.app-container');
+  if (appContainer) {
+    appContainer.classList.remove('vibe-open');
+  }
+}
+
+function renderVibeAnalyzer(){
+  const drawer = document.getElementById('vibe-analyzer');
+  if(!npState.song){
+    drawer.innerHTML = '';
+    drawer.classList.remove('open');
+    const appContainer = document.querySelector('.app-container');
+    if (appContainer) {
+      appContainer.classList.remove('vibe-open');
+    }
+    return;
+  }
+  const s = npState.song;
+  const v = getVibeData(s);
+  
+  const cachedUrl = albumArtCache[s.id];
+  const artStyleAttr = cachedUrl 
+    ? `background-image: url('${cachedUrl}'); background-size: cover; background-position: center;` 
+    : `background: ${artGradient(s.genre)};`;
+  
+  if (!cachedUrl) {
+    fetchAndCacheAlbumArt(s);
+  }
+  
+  let waveBars = '';
+  const barCount = 25;
+  for (let i = 0; i < barCount; i++) {
+    const h = 8 + Math.round(Math.abs(Math.sin((i / barCount) * Math.PI * 2) * 16)) + (s.id * i % 6);
+    waveBars += `<rect class="va-bar va-bar-${i}" x="${i * 7 + 2}" y="${16 - h/2}" width="4.5" height="${h}" rx="1.5"/>`;
+  }
+
+  drawer.innerHTML = `
+    <div class="va-head">
+      <h2>${t('바이브 분석기','Vibe Analyzer','バイブ分析器')}</h2>
+      <button class="va-close" onclick="closeVibeAnalyzer()">${ICON.close}</button>
+    </div>
+    <div class="va-body">
+      <div class="va-song-show">
+        <div class="va-art-wrap" data-art-song-id="${s.id}" style="${artStyleAttr}">
+          <div class="va-wave-glow"></div>
+          <span style="opacity:0.8; ${cachedUrl ? 'display:none;' : ''}">${genreById(s.genre)?.emoji || '●'}</span>
+        </div>
+        <div class="va-title">${esc(s.title)}</div>
+        <div class="va-artist"><a href="#artist/${encodeURIComponent(s.artist)}" onclick="closeVibeAnalyzer()" style="color:inherit; text-decoration:none; border-bottom:1px dashed var(--text-secondary); cursor:pointer;">${esc(s.artist)}</a></div>
+        <div style="margin-top:6px">${genreTagHTML(s.genre)}</div>
+      </div>
+      
+      <div class="va-player-ctrl">
+        <div class="vap-row">
+          <span class="vap-time" id="va-elapsed">0:00</span>
+          <svg class="va-wave-svg" id="va-wave" onclick="seekWave(event)" viewBox="0 0 180 32">
+            ${waveBars}
+          </svg>
+          <span class="vap-time">${s.duration}</span>
+        </div>
+        
+        <div class="player-btns-row">
+          <button class="player-btn ${isShuffle?'active':''}" id="va-shuffle-btn" onclick="toggleShuffle()" title="${t('셔플','Shuffle','シャッフル')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+          </button>
+          <button class="player-btn" onclick="prevSong()" title="${t('이전 곡','Previous','前の曲')}">${ICON.prev}</button>
+          <button class="player-btn play-toggle" onclick="togglePlay()" id="va-play-btn" title="${t('재생/일시정지','Play/Pause','再生/一時停止')}">
+            ${npState.playing?ICON.pause:ICON.play}
+          </button>
+          <button class="player-btn" onclick="nextSong()" title="${t('다음 곡','Next','次の曲')}">${ICON.next}</button>
+          <button class="player-btn ${isRepeat?'active':''}" id="va-repeat-btn" onclick="toggleRepeat()" title="${t('반복','Repeat','リピート')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </button>
+        </div>
+        
+        <div class="vap-volume-row" style="display:flex; align-items:center; gap:8px; width:100%; margin-top:4px; justify-content:center;">
+          <span style="opacity:0.6; display:flex; align-items:center;">${ICON.volume}</span>
+          <input type="range" class="vol-slider" min="0" max="100" value="${Math.round(npState.volume*100)}" oninput="changeVolume(this.value)" title="${t('볼륨','Volume','音量')}">
+        </div>
+      </div>
+ 
+      <div class="va-meta-info" style="display:flex; justify-content:space-around; gap:16px; width:100%; border-bottom:1px solid var(--border-subtle); padding-bottom:var(--space-3); margin-bottom:-8px; font-family:var(--font-mono); font-size:11px; color:var(--text-secondary);">
+        <div>${t('발매일','Released','リリース')}: <strong>${s.year}</strong></div>
+        <div>${t('누적 재생','Streams','再生回数')}: <strong>${fmtListeners(s.streamCount)}</strong></div>
+      </div>
+ 
+      <div class="va-stats">
+        <div class="va-stat-row">
+          <div class="va-stat-lbl"><span>${t('에너지 (Energy)','Energy','エネルギー (Energy)')}</span><span>${v.energy}%</span></div>
+          <div class="va-stat-track"><div class="va-stat-fill" style="width:${v.energy}%"></div></div>
+        </div>
+        <div class="va-stat-row">
+          <div class="va-stat-lbl"><span>${t('템포 (Tempo)','Tempo','テンポ (Tempo)')}</span><span>${v.tempo} BPM</span></div>
+          <div class="va-stat-track"><div class="va-stat-fill" style="width:${(v.tempo - 40) / 140 * 100}%"></div></div>
+        </div>
+        <div class="va-stat-row">
+          <div class="va-stat-lbl"><span>${t('어쿠스틱 감성 (Acoustic)','Acoustic Warmth','アコースティック感性 (Acoustic)')}</span><span>${v.organic}%</span></div>
+          <div class="va-stat-track"><div class="va-stat-fill" style="width:${v.organic}%"></div></div>
+        </div>
+        <div class="va-stat-row">
+          <div class="va-stat-lbl"><span>${t('감정 온도 (Mood)','Emotional Mood','感情のムード (Mood)')}</span><span>${v.mood > 60 ? t('쾌활함/밝음','Bright/Happy','明るい/エネルギッシュ') : t('차분함/어두움','Calm/Moody','穏やか/メランコリー')} (${v.mood}%)</span></div>
+          <div class="va-stat-track"><div class="va-stat-fill" style="width:${v.mood}%"></div></div>
+        </div>
+      </div>
+ 
+      <div class="va-anal-text">
+        ${t(v.analysisKo, v.analysisEn, v.analysisJa)}
+      </div>
+ 
+      <div class="va-lyrics-card" style="background:#0a0a0a; border:1px solid var(--border-subtle); padding:var(--space-4); border-radius:0px; display:flex; flex-direction:column; gap:8px;">
+        <div style="font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">${t('실시간 가사 (지원 예정)','Lyrics (Coming Soon)','リアルタイム歌詞 (対応予定)')}</div>
+        <div style="font-size:12px; line-height:1.6; color:var(--text-secondary); opacity:0.65; white-space:pre-line;">
+          ${t('이 장르의 대표 명곡 가사 및 분석 서비스가 준비 중입니다.','Lyrics and real-time synchronized vocals are coming soon for this track.','このジャンルの名曲の歌詞および分析サービスを準備中です。')}
+        </div>
+      </div>
+    </div>`;
+  
+  drawer.classList.add('open');
+  const appContainer = document.querySelector('.app-container');
+  if (appContainer) {
+    appContainer.classList.add('vibe-open');
+  }
+  updateProgress();
+}
+
+function playAudio(url) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  currentAudio = new Audio(url);
+  currentAudio.volume = npState.volume;
+  currentAudio.play().catch(err => {
+    console.log("Audio playback failed (interaction required or invalid URL):", err);
+  });
+  
+  currentAudio.addEventListener('timeupdate', () => {
+    if (currentAudio && npState.playing && npState.song) {
+      npState.elapsed = currentAudio.currentTime;
+      npState.total = currentAudio.duration || durToSec(npState.song.duration);
+      updateProgress();
+    }
+  });
+  
+  currentAudio.addEventListener('ended', () => {
+    nextSong();
+  });
+}
+
+function playSong(id){
+  const song = SONGS.find(s=>s.id===id);
+  if(!song) return;
+  
+  if (isShuffle) {
+    if (shuffleQueue.length === 0) {
+      initShuffleQueue();
+    }
+    const sIdx = shuffleQueue.findIndex(s => s.id === id);
+    if (sIdx > -1) {
+      shuffleIndex = sIdx;
+    }
+  }
+  
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  
+  npState.song = song;
+  npState.total = durToSec(song.duration);
+  npState.elapsed = 0;
+  npState.playing = true;
+  renderVibeAnalyzer();
+  startTimer();
+  
+  const previewUrl = song.previewUrl || audioPreviewCache[song.id];
+  if (previewUrl) {
+    playAudio(previewUrl);
+  } else {
+    fetchAndCacheAlbumArt(song, true);
+  }
+}
+
+let visualizerInterval = null;
+let isShuffle = false;
+let isRepeat = false;
+let shuffleQueue = [];
+let shuffleIndex = -1;
+
+function initShuffleQueue() {
+  shuffleQueue = [...SONGS].sort(() => 0.5 - Math.random());
+  if (npState.song) {
+    shuffleIndex = shuffleQueue.findIndex(s => s.id === npState.song.id);
+  } else {
+    shuffleIndex = 0;
+  }
+}
+
+function startVisualizer() {
+  stopVisualizer();
+  if (!npState.playing || !npState.song) return;
+  
+  const barCount = 25;
+  const s = npState.song;
+  
+  visualizerInterval = setInterval(() => {
+    const wave = document.getElementById('va-wave');
+    if (!wave) return;
+    for (let i = 0; i < barCount; i++) {
+      const bar = wave.querySelector(`.va-bar-${i}`);
+      if (bar) {
+        const baseH = 8 + Math.round(Math.abs(Math.sin((i / barCount) * Math.PI * 2) * 16)) + (s.id * i % 6);
+        const randOffset = Math.sin(Date.now() / 150 + i) * 6 * Math.random();
+        const h = Math.max(4, Math.min(32, baseH + randOffset));
+        bar.setAttribute('height', h);
+        bar.setAttribute('y', 16 - h / 2);
+      }
+    }
+  }, 75);
+}
+
+function stopVisualizer() {
+  if (visualizerInterval) {
+    clearInterval(visualizerInterval);
+    visualizerInterval = null;
+  }
+  const wave = document.getElementById('va-wave');
+  if (wave && npState.song) {
+    const barCount = 25;
+    const s = npState.song;
+    for (let i = 0; i < barCount; i++) {
+      const bar = wave.querySelector(`.va-bar-${i}`);
+      if (bar) {
+        const h = 8 + Math.round(Math.abs(Math.sin((i / barCount) * Math.PI * 2) * 16)) + (s.id * i % 6);
+        bar.setAttribute('height', h);
+        bar.setAttribute('y', 16 - h / 2);
+      }
+    }
+  }
+}
+
+function toggleShuffle() {
+  isShuffle = !isShuffle;
+  const btn = document.getElementById('va-shuffle-btn');
+  if (btn) btn.classList.toggle('active', isShuffle);
+  if (isShuffle) {
+    initShuffleQueue();
+  }
+}
+
+function toggleRepeat() {
+  isRepeat = !isRepeat;
+  const btn = document.getElementById('va-repeat-btn');
+  if (btn) btn.classList.toggle('active', isRepeat);
+}
+
+function changeVolume(val) {
+  npState.volume = val / 100;
+  if (currentAudio) {
+    currentAudio.volume = npState.volume;
+  }
+}
+
+function togglePlay(){
+  if(!npState.song) return;
+  npState.playing = !npState.playing;
+  
+  if(npState.playing) {
+    if (currentAudio) {
+      currentAudio.play().catch(err => console.log("Audio play failed:", err));
+    } else {
+      const previewUrl = npState.song.previewUrl || audioPreviewCache[npState.song.id];
+      if (previewUrl) {
+        playAudio(previewUrl);
+      } else {
+        fetchAndCacheAlbumArt(npState.song, true);
+      }
+    }
+    startTimer();
+  } else {
+    if (currentAudio) {
+      currentAudio.pause();
+    }
+    stopTimer();
+  }
+  
+  const btn = document.getElementById('va-play-btn');
+  if(btn) btn.innerHTML = npState.playing ? ICON.pause : ICON.play;
+}
+
+function startTimer(){
+  stopTimer();
+  npState.timer = setInterval(()=>{
+    if (currentAudio) {
+      if (currentAudio.ended) {
+        nextSong();
+      }
+      return;
+    }
+    if(npState.elapsed >= npState.total){ nextSong(); return; }
+    npState.elapsed++;
+    updateProgress();
+  }, 1000);
+  startVisualizer();
+}
+
+function stopTimer(){ 
+  if(npState.timer){ clearInterval(npState.timer); npState.timer=null; } 
+  stopVisualizer();
+}
+
+function stepSong(dir){
+  if(!npState.song) return;
+  if(isRepeat && dir > 0) {
+    playSong(npState.song.id);
+    return;
+  }
+  if(isShuffle) {
+    if (shuffleQueue.length === 0) {
+      initShuffleQueue();
+    }
+    shuffleIndex = (shuffleIndex + dir + shuffleQueue.length) % shuffleQueue.length;
+    const nextS = shuffleQueue[shuffleIndex];
+    if (nextS) {
+      playSong(nextS.id);
+    }
+    return;
+  }
+  const idx = SONGS.findIndex(s=>s.id===npState.song.id);
+  const next = SONGS[(idx + dir + SONGS.length) % SONGS.length];
+  playSong(next.id);
+}
+function nextSong(){ stepSong(1); }
+function prevSong(){
+  if(npState.elapsed > 3){ 
+    npState.elapsed=0; 
+    if (currentAudio) {
+      currentAudio.currentTime = 0;
+    }
+    updateProgress(); 
+    return; 
+  }
+  stepSong(-1);
+}
+
+function updateProgress(){
+  const el = document.getElementById('va-elapsed');
+  if(el) el.textContent = secToDur(npState.elapsed);
+  
+  const wave = document.getElementById('va-wave');
+  if(wave){
+    const pct = npState.elapsed / npState.total;
+    const barCount = 25;
+    const activeIndex = Math.floor(pct * barCount);
+    for (let i = 0; i < barCount; i++) {
+      const bar = wave.querySelector(`.va-bar-${i}`);
+      if(bar){
+        if (i <= activeIndex) {
+          bar.setAttribute('fill', 'var(--accent-cyan)');
+        } else {
+          bar.setAttribute('fill', 'rgba(255, 255, 255, 0.15)');
+        }
+      }
+    }
+  }
+}
+
+function seekWave(e){
+  const r = document.getElementById('va-wave').getBoundingClientRect();
+  const targetSec = Math.round((e.clientX-r.left)/r.width*npState.total);
+  npState.elapsed = targetSec;
+  if (currentAudio) {
+    currentAudio.currentTime = targetSec;
+  }
+  updateProgress();
+}
+
+/* ===================== INIT ===================== */
+document.getElementById('nav-back').onclick = ()=>history.back();
+document.getElementById('nav-fwd').onclick = ()=>history.forward();
+document.getElementById('main-content').addEventListener('scroll', e=>{
+  document.getElementById('global-header').classList.toggle('scrolled', e.target.scrollTop > 12);
+});
+renderNav();
+applyLang();
+handleRoute();
+</script>
+</body>
+</html>
