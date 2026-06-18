@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Dither from './Dither';
-import './intro.css';
+import '../styles/intro.css';
 
 const CONTENT = {
   ko: {

@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { viteSingleFile } from 'vite-plugin-singlefile';
 
 // Middleware to rewrite root '/' to '/intro.html'
 const rootRedirectPlugin = () => ({
@@ -16,7 +17,7 @@ const rootRedirectPlugin = () => ({
 });
 
 export default defineConfig({
-  plugins: [react(), rootRedirectPlugin()],
+  plugins: [react(), rootRedirectPlugin(), viteSingleFile()],
   build: {
     rollupOptions: {
       input: {
