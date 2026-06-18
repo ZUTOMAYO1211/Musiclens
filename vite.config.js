@@ -17,11 +17,12 @@ const rootRedirectPlugin = () => ({
 });
 
 export default defineConfig({
-  plugins: [react(), rootRedirectPlugin(), viteSingleFile()],
+  plugins: [react(), viteSingleFile()],
   build: {
     rollupOptions: {
       input: {
-        intro: 'intro.html'
+        intro: 'index.html',
+        app: 'app.html'
       }
     }
   }
