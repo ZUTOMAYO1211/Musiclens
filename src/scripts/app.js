@@ -162,6 +162,9 @@ const routes = {
 };
 function handleRoute(){
   const hash = location.hash || '#home';
+  if (hash !== '#search' && typeof searchQuery !== 'undefined') {
+    searchQuery = '';
+  }
   const root = document.getElementById('view-root');
   root.scrollTop = 0;
   document.getElementById('main-content').scrollTop = 0;
@@ -645,6 +648,7 @@ function renderSearch(){
     <div class="search-box">
       ${ICON.search}
       <input class="search-input" id="search-input" value="${esc(searchQuery)}" placeholder="${t('곡명, 아티스트, 또는 느낌…','Song, artist, or a vibe…','曲名、アーティスト、または雰囲気…')}" oninput="onSearchInput(this.value)" autocomplete="off">
+      ${q ? `<button onclick="quickSearch('')" style="background:none;border:none;color:inherit;cursor:pointer;display:flex;padding:4px;opacity:0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">${ICON.close}</button>` : ''}
     </div>
     <div class="ai-suggest">${examples.map(e=>`<button class="pill-tag" onclick="quickSearch('${e}')">${e}</button>`).join('')}</div>
     ${body}
